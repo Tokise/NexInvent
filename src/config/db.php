@@ -1,6 +1,6 @@
 <?php
 // Database configuration
-define('DB_HOST', 'localhost');
+define('DB_HOST', 'http://192.168.254.114:3306');
 define('DB_USER', 'root');
 define('DB_PASS', 'root');  // Default XAMPP MySQL password is blank
 define('DB_NAME', 'nexinvent');
