@@ -1,7 +1,7 @@
 # NexInvent - Inventory Management System 📦
 
 <p align="center">
-  <img src="assets/img/logo.png" alt="NexInvent Logo" width="200"/>
+  <img src="assets/LOGO.png" alt="NexInvent Logo" width="200"/>
 </p>
 
 NexInvent is a comprehensive inventory management system designed to help businesses efficiently track and manage their stock, purchase orders, and sales. Built with PHP and MySQL, it offers a modern and user-friendly interface for managing all aspects of inventory control.
@@ -184,4 +184,4 @@ NexInvent/
 
 ## 💬 Support
 
-For support, please email ablenjohnre@gmail.com or open an issue in the GitHub repository. 
+For support, please email ablenjohnrey@gmail.com or open an issue in the GitHub repository. 
