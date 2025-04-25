@@ -18,17 +18,27 @@ try {
     ");
     $stmt->execute([$adminPassword, $adminPassword]);
 
-    // Initialize customer account with proper password hash
-    $customerPassword = password_hash('customer123', PASSWORD_DEFAULT);
+    // Initialize manager account
+    $managerPassword = password_hash('manager123', PASSWORD_DEFAULT);
     $stmt = $conn->prepare("
         INSERT INTO users (username, password, email, full_name, role, status)
-        VALUES ('customer', ?, 'customer@example.com', 'Test Customer', 'customer', 'active')
+        VALUES ('manager', ?, 'manager@nexinvent.local', 'Test Manager', 'manager', 'active')
         ON DUPLICATE KEY UPDATE 
         password = ?,
         status = 'active'
     ");
-    $stmt->execute([$customerPassword, $customerPassword]);
+    $stmt->execute([$managerPassword, $managerPassword]);
 
+    // Initialize employee account
+    $employeePassword = password_hash('employee123', PASSWORD_DEFAULT);
+    $stmt = $conn->prepare("
+        INSERT INTO users (username, password, email, full_name, role, status)
+        VALUES ('employee', ?, 'employee@nexinvent.local', 'Test Employee', 'employee', 'active')
+        ON DUPLICATE KEY UPDATE 
+        password = ?,
+        status = 'active'
+    ");
+    $stmt->execute([$employeePassword, $employeePassword]);
    
     $success = true;
     $message = "Setup completed successfully! You can now log in with the provided credentials.";
@@ -179,7 +189,7 @@ try {
         <div class="setup-header">
             <img src="assets/LOGO.png" alt="NexInvent Logo">
             <h1>System Setup</h1>
-            <p>Initialize your NexInvent system</p>
+            <p>Initialize your NexInvent Inventory Management System</p>
         </div>
 
         <div class="setup-step">
@@ -234,27 +244,43 @@ try {
                 </div>
 
                 <div class="credential-box">
-                    <h3>Test Customer Account</h3>
+                    <h3>Manager Account</h3>
                     <div class="credential-item">
                         <span>Username:</span>
-                        <strong>customer</strong>
+                        <strong>manager</strong>
                     </div>
                     <div class="credential-item">
                         <span>Password:</span>
-                        <strong>customer123</strong>
+                        <strong>manager123</strong>
                     </div>
                     <div class="credential-item">
                         <span>Status:</span>
                         <strong class="text-success">Active</strong>
                     </div>
                 </div>
+
+                <div class="credential-box">
+                    <h3>Employee Account</h3>
+                    <div class="credential-item">
+                        <span>Username:</span>
+                        <strong>employee</strong>
+                    </div>
+                    <div class="credential-item">
+                        <span>Password:</span>
+                        <strong>employee123</strong>
+                    </div>
+                    <div class="credential-item">
+                        <span>Status:</span>
+                        <strong class="text-success">Active</strong>
+                    </div>
+                </div>
+
+                <a href="/NexInvent/src/login/index.php" class="btn btn-primary">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    Proceed to Login
+                </a>
             </div>
         </div>
-
-        <a href="/NexInvent/src/login/index.php" class="btn btn-primary">
-            Proceed to Login
-            <i class="bi bi-arrow-right ms-2"></i>
-        </a>
     </div>
 </body>
 </html>

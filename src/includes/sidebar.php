@@ -15,6 +15,11 @@ if (!function_exists('isPathActive')) {
         return $current_section === $section && $current_subsection === $subsection;
     }
 }
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    return;
+}
 ?>
 
 
@@ -32,24 +37,32 @@ if (!function_exists('isPathActive')) {
                 <a href="/NexInvent/src/modules/dashboard/index.php" class="sidebar-link <?php echo isPathActive('dashboard') ? 'active' : ''; ?>">
                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
                 </a>
+                
+                <?php if ($_SESSION['role'] !== 'employee'): ?>
                 <a href="/NexInvent/src/modules/stock/index.php" class="sidebar-link <?php echo isPathActive('stock') || isPathActive('movements') ? 'active' : ''; ?>">
                     <i class="bi bi-box-seam me-2"></i> Stock
                 </a>
-                <?php if ($_SESSION['role'] !== 'employee'): ?>
-                <a href="/NexInvent/src/modules/orders/index.php" class="sidebar-link <?php echo isPathActive('orders') ? 'active' : ''; ?>">
-                    <i class="bi bi-cart4 me-2"></i> Orders
-                </a>    
+                
                 <a href="/NexInvent/src/modules/categories/index.php" class="sidebar-link <?php echo isPathActive('categories') ? 'active' : ''; ?>">
                     <i class="bi bi-tags me-2"></i> Categories
                 </a>    
-                <?php endif; ?>
+                
                 <a href="/NexInvent/src/modules/products/index.php" class="sidebar-link <?php echo isPathActive('products') || (isPathActive('products')) ? 'active' : ''; ?>">
                     <i class="bi bi-cart3 me-2"></i> Products
                 </a>
+                <?php endif; ?>
+
+                <?php if ($_SESSION['role'] !== 'manager'): ?>
+                <a href="/NexInvent/src/modules/pos/index.php" class="sidebar-link <?php echo isPathActive('pos') ? 'active' : ''; ?>">
+                    <i class="bi bi-receipt me-2"></i> Point of Sale
+                </a>
+                <?php endif; ?>
+
                 <a href="/NexInvent/src/modules/sales/index.php" class="sidebar-link <?php echo isPathActive('sales') || (isPathActive('sales')) ? 'active' : ''; ?>">
                     <i class="bi bi-graph-up me-2"></i> Sales
                 </a>
-                <?php if ($_SESSION['role'] !== 'employee'): ?>
+
+                <?php if ($_SESSION['role'] === 'admin'): ?>
                 <a href="/NexInvent/src/modules/purchases/index.php" class="sidebar-link <?php echo isPathActive('purchases') ? 'active' : ''; ?>">
                     <i class="bi bi-bag me-2"></i> Purchases
                 </a>
@@ -57,17 +70,13 @@ if (!function_exists('isPathActive')) {
             </nav>
         </div>
 
-        <?php if ($_SESSION['role'] !== 'employee' && $_SESSION['role'] !== 'manager'): ?>
+        <?php if ($_SESSION['role'] === 'admin'): ?>
         <div class="nav-section">
             <div class="nav-header">Management</div>
             <nav>
-                <a href="/NexInvent/src/modules/suppliers/index.php" class="sidebar-link <?php echo isPathActive('suppliers') ? 'active' : ''; ?>">
-                    <i class="bi bi-truck me-2"></i> Suppliers
-                </a>
                 <a href="/NexInvent/src/modules/employees/index.php" class="sidebar-link <?php echo isPathActive('employees') ? 'active' : ''; ?>">
                     <i class="bi bi-people me-2"></i> Employees
                 </a>
-           
             </nav>
         </div>
         <?php endif; ?>
@@ -75,10 +84,13 @@ if (!function_exists('isPathActive')) {
         <div class="nav-section">
             <div class="nav-header">Reports & Settings</div>
             <nav>
+                <?php if ($_SESSION['role'] !== 'employee'): ?>
                 <a href="/NexInvent/src/modules/reports/index.php" class="sidebar-link <?php echo isPathActive('reports') ? 'active' : ''; ?>">
                     <i class="bi bi-file-earmark-text me-2"></i> Reports
                 </a>
-                <a href="/NexInvent/src/modules/users/settings.php" class="sidebar-link <?php echo isPathActive('users') ? 'active' : ''; ?>">
+                <?php endif; ?>
+                
+                <a href="/NexInvent/src/modules/users/settings.php" class="sidebar-link <?php echo isPathActive('users', 'settings') ? 'active' : ''; ?>">
                     <i class="bi bi-gear me-2"></i> My Account
                 </a>
             </nav>

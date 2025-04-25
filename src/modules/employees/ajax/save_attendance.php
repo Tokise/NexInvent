@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Validate employee exists
         $sql = "SELECT employee_id FROM employee_details WHERE employee_id = ?";
-        $employee = fetchOne($sql, [$_POST['employee_id']]);
+        $employee = fetchRow($sql, [$_POST['employee_id']]);
         if (!$employee) {
             throw new Exception('Invalid employee selected.');
         }
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Check for existing attendance record
         $sql = "SELECT attendance_id FROM attendance WHERE employee_id = ? AND date = ?";
-        $existing = fetchOne($sql, [$_POST['employee_id'], $_POST['date']]);
+        $existing = fetchRow($sql, [$_POST['employee_id'], $_POST['date']]);
         if ($existing) {
             throw new Exception('An attendance record already exists for this employee on the selected date.');
         }

@@ -3,6 +3,7 @@ session_start();
 require_once '../../../config/db.php';
 require_once '../../../includes/permissions.php';
 
+
 // Set JSON response header
 header('Content-Type: application/json');
 
@@ -18,7 +19,7 @@ try {
     }
 
     // Validate required fields
-    $required_fields = ['sku', 'name', 'category_id', 'unit_price', 'reorder_level'];
+    $required_fields = ['sku', 'name', 'category_id', 'unit_price', 'reorder_level', 'threshold_amount'];
     foreach ($required_fields as $field) {
         if (!isset($_POST[$field]) || trim($_POST[$field]) === '') {
             throw new Exception("$field is required");
@@ -32,6 +33,10 @@ try {
 
     if (!is_numeric($_POST['reorder_level']) || $_POST['reorder_level'] < 0) {
         throw new Exception('Reorder level must be a positive number');
+    }
+
+    if (!is_numeric($_POST['threshold_amount']) || $_POST['threshold_amount'] < 0) {
+        throw new Exception('OUT stock threshold must be a positive number');
     }
 
     // Get database connection
@@ -55,6 +60,53 @@ try {
             throw new Exception('Invalid category selected');
         }
 
+        // Get current product data to handle image update
+        $stmt = $db->prepare("SELECT image_url FROM products WHERE id = ?");
+        $stmt->bind_param("i", $_POST['id']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $currentProduct = $result->fetch_assoc();
+
+        // Handle image upload if present
+        $imageUrl = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $fileInfo = pathinfo($_FILES['image']['name']);
+            $extension = strtolower($fileInfo['extension']);
+            
+            // Validate file type
+            $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+            if (!in_array($extension, $allowedTypes)) {
+                throw new Exception('Invalid file type. Only JPG, PNG and GIF are allowed.');
+            }
+
+            // Generate unique filename
+            $filename = uniqid() . '.' . $extension;
+            $targetPath = '../../../uploads/products/' . $filename;
+
+            // Move uploaded file
+            if (!move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+                throw new Exception('Failed to upload image');
+            }
+
+            $imageUrl = 'uploads/products/' . $filename;
+
+            // Delete old image if exists
+            if ($currentProduct['image_url'] && file_exists('../../../uploads/products/' . basename($currentProduct['image_url']))) {
+                unlink('../../../uploads/products/' . basename($currentProduct['image_url']));
+            }
+        } else {
+            // Keep existing image if no new one uploaded
+            $imageUrl = $currentProduct['image_url'];
+        }
+
+        // Handle image removal
+        if (isset($_POST['remove_image']) && $_POST['remove_image'] === 'true') {
+            if ($currentProduct['image_url'] && file_exists('../../../uploads/products/' . basename($currentProduct['image_url']))) {
+                unlink('../../../uploads/products/' . basename($currentProduct['image_url']));
+            }
+            $imageUrl = null;
+        }
+
         // Update product
         $product_data = [
             'name' => trim($_POST['name']),
@@ -62,8 +114,10 @@ try {
             'category_id' => $_POST['category_id'],
             'unit_price' => $_POST['unit_price'],
             'reorder_level' => $_POST['reorder_level'],
+            'threshold_amount' => $_POST['threshold_amount'],
             'updated_by' => $_SESSION['user_id'],
-            'updated_at' => date('Y-m-d H:i:s')
+            'updated_at' => date('Y-m-d H:i:s'),
+            'image_url' => $imageUrl
         ];
 
         $result = update('products', $product_data, 'sku = ?', [trim($_POST['sku'])]);

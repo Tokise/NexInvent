@@ -17,7 +17,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $department = $_POST['department'] ?? '';
     $position = $_POST['position'] ?? '';
     $hire_date = $_POST['hire_date'] ?? '';
-    $salary = $_POST['salary'] ?? '';
     
     $errors = [];
     
@@ -39,22 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (strtotime($hire_date) > time()) {
         $errors['hire_date'] = "Hire date cannot be in the future";
     }
-    
-    if (empty($salary)) {
-        $errors['salary'] = "Salary is required";
-    } elseif (!is_numeric($salary) || $salary <= 0) {
-        $errors['salary'] = "Salary must be a positive number";
-    }
 
     if (empty($errors)) {
         try {
             // Insert employee record
             $employee_data = [
-                'full_name' => $full_name,
+                'temp_name' => $full_name,
                 'department' => $department,
                 'position' => $position,
                 'hire_date' => $hire_date,
-                'salary' => $salary,
                 'created_at' => date('Y-m-d H:i:s'),
                 'created_by' => $_SESSION['user_id']
             ];
@@ -122,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <div class="invalid-feedback"><?php echo $errors['full_name']; ?></div>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="department" class="form-label">Department</label>
@@ -143,24 +135,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </div>
                                 </div>
                                 
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="hire_date" class="form-label">Hire Date</label>
-                                        <input type="date" class="form-control <?php echo isset($errors['hire_date']) ? 'is-invalid' : ''; ?>" 
-                                               id="hire_date" name="hire_date" value="<?php echo htmlspecialchars($_POST['hire_date'] ?? ''); ?>">
-                                        <?php if (isset($errors['hire_date'])): ?>
-                                            <div class="invalid-feedback"><?php echo $errors['hire_date']; ?></div>
-                                        <?php endif; ?>
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label for="salary" class="form-label">Salary</label>
-                                        <input type="number" step="0.01" class="form-control <?php echo isset($errors['salary']) ? 'is-invalid' : ''; ?>" 
-                                               id="salary" name="salary" value="<?php echo htmlspecialchars($_POST['salary'] ?? ''); ?>">
-                                        <?php if (isset($errors['salary'])): ?>
-                                            <div class="invalid-feedback"><?php echo $errors['salary']; ?></div>
-                                        <?php endif; ?>
-                                    </div>
+                                <div class="mb-3">
+                                    <label for="hire_date" class="form-label">Hire Date</label>
+                                    <input type="date" class="form-control <?php echo isset($errors['hire_date']) ? 'is-invalid' : ''; ?>" 
+                                           id="hire_date" name="hire_date" value="<?php echo htmlspecialchars($_POST['hire_date'] ?? ''); ?>">
+                                    <?php if (isset($errors['hire_date'])): ?>
+                                        <div class="invalid-feedback"><?php echo $errors['hire_date']; ?></div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <div class="d-grid gap-2">

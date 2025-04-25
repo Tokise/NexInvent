@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Get user by username
         $sql = "SELECT * FROM users WHERE username = ?";
-        $user = fetchOne($sql, [$username]);
+        $user = fetchRow($sql, [$username]);
         
         if (!$user) {
             $error = "Invalid username or password";
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($user['role'] === 'customer') {
                     // Check if customer record exists by email
-                    $customer = fetchOne("SELECT customer_id FROM customers WHERE email = ?", [$user['email']]);
+                    $customer = fetchRow("SELECT customer_id FROM customers WHERE email = ?", [$user['email']]);
                     
                     if (!$customer) {
                         // Only create customer record if it doesn't exist
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Check if customer profile exists
-                    $profile = fetchOne("SELECT * FROM customer_profiles WHERE user_id = ?", [$user['user_id']]);
+                    $profile = fetchRow("SELECT * FROM customer_profiles WHERE user_id = ?", [$user['user_id']]);
                     if (!$profile) {
                         $profile_data = [
                             'user_id' => $user['user_id'],
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 
                 // Update last login timestamp
-                executeQuery("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?", [$user['user_id']]);
+                execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?", [$user['user_id']]);
                 
                 // Commit transaction
                 $conn->commit();

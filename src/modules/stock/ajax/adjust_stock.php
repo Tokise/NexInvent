@@ -51,14 +51,14 @@ try {
 
     try {
         // Check if product exists and get current stock
-        $sql = "SELECT product_id, quantity_in_stock FROM products WHERE product_id = ? FOR UPDATE";
+        $sql = "SELECT product_id, in_stock_quantity FROM products WHERE product_id = ? FOR UPDATE";
         $product = fetchOne($sql, [$product_id]);
 
         if (!$product) {
             throw new Exception('Product not found');
         }
 
-        $current_stock = $product['quantity_in_stock'];
+        $current_stock = $product['in_stock_quantity'];
 
         // For stock out, check if we have enough quantity
         if ($type === 'out' && $current_stock < $quantity) {
@@ -71,7 +71,7 @@ try {
 
         // Update product stock
         $update_data = [
-            'quantity_in_stock' => $new_stock,
+            'in_stock_quantity' => $new_stock,
             'updated_by' => $_SESSION['user_id'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -83,7 +83,7 @@ try {
             'product_id' => $product_id,
             'user_id' => $_SESSION['user_id'],
             'quantity' => $adjustment,
-            'type' => 'adjustment',
+            'type' => $type === 'in' ? 'in_purchase' : 'out_adjustment',
             'notes' => $reason,
             'created_at' => date('Y-m-d H:i:s')
         ];

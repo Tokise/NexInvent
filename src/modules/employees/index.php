@@ -12,17 +12,24 @@ if (!isset($_SESSION['user_id'])) {
 requirePermission('manage_employees');
 
 // Get all employees
-$sql = "SELECT e.*, u.email, u.status as user_status, u.role, u.user_id 
+$sql = "SELECT e.*, 
+        COALESCE(u.full_name, e.temp_name) as full_name,
+        u.email, 
+        u.status as user_status, 
+        u.role, 
+        u.user_id 
         FROM employee_details e 
         LEFT JOIN users u ON e.user_id = u.user_id 
-        ORDER BY e.full_name";
+        ORDER BY COALESCE(u.full_name, e.temp_name)";
 $employees = fetchAll($sql);
 
 // Get attendance records
-$sql = "SELECT a.*, e.full_name as employee_name 
+$sql = "SELECT a.*, 
+        COALESCE(u.full_name, e.temp_name) as employee_name 
         FROM attendance a 
         JOIN employee_details e ON a.employee_id = e.employee_id 
-        ORDER BY a.date DESC, e.full_name";
+        LEFT JOIN users u ON e.user_id = u.user_id 
+        ORDER BY a.date DESC, COALESCE(u.full_name, e.temp_name)";
 $attendance_records = fetchAll($sql);
 ?>
 

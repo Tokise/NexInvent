@@ -12,33 +12,26 @@ if (!isset($_SESSION['user_id'])) {
 // Check if user has permission to view sales
 requirePermission('view_sales');
 
-// Get user permissions for UI rendering
-$can_create_sale = hasPermission('create_sale');
+// Get date filters - default to show all sales if no dates specified
+$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '2000-01-01';
+$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
 
-// Fetch recent sales
-$sql = "SELECT so.*, c.name as customer_name, 
-        COUNT(soi.order_item_id) as total_items
-        FROM sales_orders so 
-        LEFT JOIN customers c ON so.customer_id = c.customer_id
-        LEFT JOIN sales_order_items soi ON so.sale_id = soi.sale_id
-        GROUP BY so.sale_id
-        ORDER BY so.created_at DESC 
-        LIMIT 10";
-$recent_sales = fetchAll($sql);
+// Fetch sales summary
+$sql = "SELECT 
+            COUNT(*) as total_transactions,
+            SUM(total_amount) as total_revenue,
+            SUM(tax_amount) as total_tax,
+            AVG(total_amount) as average_sale
+        FROM sales 
+        WHERE DATE(created_at) BETWEEN ? AND ?";
+$summary = fetchRow($sql, [$start_date, $end_date]);
 
-// Fetch sales statistics
-$stats = [
-    'today_sales' => fetchValue("SELECT COUNT(*) FROM sales_orders WHERE DATE(created_at) = CURDATE()"),
-    'month_sales' => fetchValue("SELECT COUNT(*) FROM sales_orders WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())"),
-    'pending_orders' => fetchValue("SELECT COUNT(*) FROM sales_orders WHERE status IN ('draft', 'confirmed', 'processing')"),
-    'unpaid_orders' => fetchValue("SELECT COUNT(*) FROM sales_orders WHERE payment_status != 'paid'")
-];
-
-// Calculate total revenue
-$revenue = [
-    'today' => fetchValue("SELECT COALESCE(SUM(grand_total), 0) FROM sales_orders WHERE DATE(created_at) = CURDATE()"),
-    'month' => fetchValue("SELECT COALESCE(SUM(grand_total), 0) FROM sales_orders WHERE MONTH(created_at) = MONTH(CURDATE()) AND YEAR(created_at) = YEAR(CURDATE())")
-];
+// Fetch recent sales with cashier details - order by most recent first
+$sql = "SELECT s.*, u.username as cashier_name
+        FROM sales s
+        LEFT JOIN users u ON s.cashier_id = u.user_id
+        ORDER BY s.created_at DESC";
+$sales = fetchAll($sql, []);
 ?>
 
 <!DOCTYPE html>
@@ -46,137 +39,181 @@ $revenue = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexInvent - Sales Management</title>
+    <title>NexInvent - Sales History</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <!-- Add these new Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-
-
-    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .product-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .sale-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-completed { background-color: #198754; }
+        .status-pending { background-color: #ffc107; }
+        .status-cancelled { background-color: #dc3545; }
+    </style>
 </head>
 <body>
 
 <?php include '../../includes/sidebar.php'; ?>
 <?php include '../../includes/header.php'; ?>
+
 <div class="main-content">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Sales Management</h2>
+            <h2>Sales History</h2>
+            <a href="../pos/index.php" class="btn btn-primary">
+                <i class="bi bi-cart-plus"></i> New Sale
+            </a>
         </div>
 
-        <!-- Statistics Cards -->
+        <!-- Date Filter -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="start_date" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" 
+                               value="<?php echo $start_date; ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="end_date" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" 
+                               value="<?php echo $end_date; ?>">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-filter"></i> Apply Filter
+                        </button>
+                        <a href="index.php" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sales Summary Cards -->
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Today's Sales</h5>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0"><?php echo $stats['today_sales']; ?></h3>
-                            <h4 class="mb-0">$<?php echo number_format($revenue['today'], 2); ?></h4>
-                        </div>
+                        <h5 class="card-title">Total Sales</h5>
+                        <h3 class="mb-0"><?php echo (int)($summary['total_transactions'] ?? 0); ?></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card bg-success text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Monthly Sales</h5>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h3 class="mb-0"><?php echo $stats['month_sales']; ?></h3>
-                            <h4 class="mb-0">$<?php echo number_format($revenue['month'], 2); ?></h4>
-                        </div>
+                        <h5 class="card-title">Total Revenue</h5>
+                        <h3 class="mb-0">$<?php echo number_format((float)($summary['total_revenue'] ?? 0), 2); ?></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-warning text-dark">
+                <div class="card bg-info text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Pending Orders</h5>
-                        <h3 class="mb-0"><?php echo $stats['pending_orders']; ?></h3>
+                        <h5 class="card-title">Total Tax</h5>
+                        <h3 class="mb-0">$<?php echo number_format((float)($summary['total_tax'] ?? 0), 2); ?></h3>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-danger text-white">
+                <div class="card bg-warning text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Unpaid Orders</h5>
-                        <h3 class="mb-0"><?php echo $stats['unpaid_orders']; ?></h3>
+                        <h5 class="card-title">Average Sale</h5>
+                        <h3 class="mb-0">$<?php echo number_format((float)($summary['average_sale'] ?? 0), 2); ?></h3>
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <!-- Recent Sales Table -->
+        <!-- Sales Table -->
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Recent Sales</h5>
-                <table id="recentSalesTable" class="table table-striped">
+                <table id="salesTable" class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Customer</th>
-                            <th>Date</th>
+                            <th>Transaction #</th>
+                            <th>Date & Time</th>
                             <th>Items</th>
-                            <th>Total</th>
+                            <th>Payment Method</th>
                             <th>Status</th>
-                            <th>Payment</th>
+                            <th>Cashier</th>
+                            <th>Total</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($recent_sales as $sale): ?>
+                        <?php foreach ($sales as $sale): ?>
                             <tr>
-                                <td>#<?php echo str_pad($sale['sale_id'], 6, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo htmlspecialchars($sale['customer_name']); ?></td>
-                                <td><?php echo date('Y-m-d', strtotime($sale['created_at'])); ?></td>
-                                <td><?php echo $sale['total_items']; ?></td>
-                                <td>$<?php echo number_format($sale['grand_total'], 2); ?></td>
+                                <td><?php echo htmlspecialchars($sale['transaction_number']); ?></td>
+                                <td><?php echo date('Y-m-d H:i:s', strtotime($sale['created_at'])); ?></td>
                                 <td>
-                                    <span class="badge bg-<?php echo getStatusBadgeClass($sale['status']); ?>">
-                                        <?php echo ucfirst($sale['status']); ?>
+                                    <button class="btn btn-sm btn-outline-primary" 
+                                            onclick="viewSaleItems(<?php echo $sale['sale_id']; ?>)">
+                                        View Items
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        <?php echo ucfirst($sale['payment_method']); ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-<?php echo getPaymentStatusBadgeClass($sale['payment_status'] ?? 'unpaid'); ?>">
-                                        <?php echo ucfirst(str_replace('_', ' ', $sale['payment_status'] ?? 'unpaid')); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="../orders/view.php?id=<?php echo $sale['sale_id']; ?>" class="btn btn-sm btn-info">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        
-                                        <?php if ($sale['payment_status'] !== 'paid' && hasPermission('process_payments')): ?>
-                                        <a href="../orders/payment.php?id=<?php echo $sale['sale_id']; ?>" class="btn btn-sm btn-success">
-                                            <i class="bi bi-cash"></i>
-                                        </a>
-                                        <?php endif; ?>
-                                        
-                                        <?php if ($sale['status'] !== 'completed' && $sale['status'] !== 'cancelled' && (hasPermission('manage_sales') || hasPermission('process_payments'))): ?>
-                                        <button type="button" class="btn btn-sm btn-primary" onclick="updateOrderStatus(<?php echo $sale['sale_id']; ?>)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        
-                                        <?php if (hasPermission('delete_sales')): ?>
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="archiveOrder(<?php echo $sale['sale_id']; ?>)">
-                                            <i class="bi bi-archive"></i>
-                                        </button>
-                                        <?php endif; ?>
+                                    <div class="d-flex align-items-center">
+                                        <span class="status-badge status-<?php echo $sale['payment_status']; ?>"></span>
+                                        <?php echo ucfirst($sale['payment_status']); ?>
                                     </div>
+                                </td>
+                                <td><?php echo htmlspecialchars($sale['cashier_name']); ?></td>
+                                <td class="text-end">$<?php echo number_format((float)($sale['total_amount'] ?? 0), 2); ?></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="printReceipt(<?php echo $sale['sale_id']; ?>)">
+                                        <i class="bi bi-printer"></i>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Items Modal -->
+<div class="modal fade" id="saleItemsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Items</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="saleItemsList" class="sale-items">
+                    <!-- Sale items will be loaded here -->
+                </div>
             </div>
         </div>
     </div>
@@ -192,140 +229,64 @@ $revenue = [
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    $('#recentSalesTable').DataTable({
-        "order": [[2, "desc"]],
-        "pageLength": 10
+    $('#salesTable').DataTable({
+        "order": [[1, "desc"]],
+        "pageLength": 25
     });
 });
 
-function updateOrderStatus(saleId) {
-    Swal.fire({
-        title: 'Update Order Status',
-        html: `
-            <select id="orderStatus" class="form-select">
-                <option value="confirmed">Confirmed</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-            </select>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Update',
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            const status = document.getElementById('orderStatus').value;
-            return fetch(`ajax/update_order_status.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `sale_id=${saleId}&status=${status}`
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(response.statusText);
-                }
-                return response.json();
-            })
-            .catch(error => {
-                Swal.showValidationMessage(`Request failed: ${error}`);
-            });
-        },
-        allowOutsideClick: () => !Swal.isLoading()
-    }).then((result) => {
-        if (result.isConfirmed) {
-            if (result.value.success) {
-                Swal.fire({
-                    title: 'Success!',
-                    text: result.value.message,
-                    icon: 'success'
-                }).then(() => {
-                    location.reload();
+function viewSaleItems(saleId) {
+    $.ajax({
+        url: 'ajax/get_sale_items.php',
+        method: 'GET',
+        data: { sale_id: saleId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                let html = '';
+                response.items.forEach(item => {
+                    html += `
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="${item.image_url ? '../../' + item.image_url : '../../assets/images/no-image.svg'}" 
+                                 class="product-img me-3" alt="${item.name}">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 text-dark">${item.name}</h6>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">
+                                        ${item.quantity} × $${parseFloat(item.unit_price).toFixed(2)}
+                                    </span>
+                                    <span class="fw-bold">
+                                        $${parseFloat(item.subtotal).toFixed(2)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 });
+                $('#saleItemsList').html(html);
+                $('#saleItemsModal').modal('show');
             } else {
                 Swal.fire({
-                    title: 'Error!',
-                    text: result.value.error,
-                    icon: 'error'
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.error || 'Failed to load sale items'
                 });
             }
-        }
-    });
-}
-
-function archiveOrder(saleId) {
-    Swal.fire({
-        title: 'Are you sure?',
-        text: "This will archive the order. You can still view it in the archived orders section.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, archive it!'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`ajax/archive_order.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `sale_id=${saleId}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Archived!',
-                        text: data.message,
-                        icon: 'success'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: data.error,
-                        icon: 'error'
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Failed to archive order. Please try again.',
-                    icon: 'error'
-                });
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading sale items:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load sale items. Please try again.'
             });
         }
     });
 }
 
-<?php
-function getStatusBadgeClass($status) {
-    return match($status) {
-        'draft' => 'secondary',
-        'confirmed' => 'primary',
-        'processing' => 'info',
-        'shipped' => 'warning',
-        'delivered' => 'success',
-        'completed' => 'success',
-        'cancelled' => 'danger',
-        default => 'secondary'
-    };
+function printReceipt(saleId) {
+    window.open(`receipt.php?sale_id=${saleId}`, '_blank');
 }
-
-function getPaymentStatusBadgeClass($status) {
-    return match($status) {
-        'paid' => 'success',
-        'partially_paid' => 'warning',
-        'unpaid' => 'danger',
-        default => 'warning'
-    };
-}
-?>
 </script>
 
 </body>

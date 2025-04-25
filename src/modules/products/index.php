@@ -27,8 +27,9 @@ $products = fetchAll($sql);
 // Fetch categories for the filter and add form
 $categories = fetchAll("SELECT * FROM categories ORDER BY name");
 
-// Get low stock products count
-$low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_stock <= reorder_level");
+// Get stock statistics
+$low_out_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE out_stock_quantity <= out_threshold_amount");
+$low_in_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE in_stock_quantity <= reorder_level");
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +45,23 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-   
+    <style>
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .stock-warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .stock-ok {
+            color: #198754;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
@@ -74,10 +91,18 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Low OUT Stock</h5>
+                        <h3 class="mb-0"><?php echo $low_out_stock_count; ?></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="card bg-danger text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Low Stock Items</h5>
-                        <h3 class="mb-0"><?php echo $low_stock_count; ?></h3>
+                        <h5 class="card-title">Low IN Stock</h5>
+                        <h3 class="mb-0"><?php echo $low_in_stock_count; ?></h3>
                     </div>
                 </div>
             </div>
@@ -91,60 +116,167 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
             </div>
         </div>
 
-        <!-- Products Table -->
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="productsTable" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>SKU</th>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Stock Level</th>
-                                <th>Unit Price</th>
-                                <th>Reorder Level</th>
-                                <th>Movements</th>
-                                <?php if ($can_manage_products): ?>
-                                <th>Actions</th>
-                                <?php endif; ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($products as $product): ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($product['sku']); ?></td>
-                                    <td><?php echo htmlspecialchars($product['name']); ?></td>
-                                    <td><?php echo htmlspecialchars($product['category_name']); ?></td>
-                                    <td>
-                                        <span class="<?php echo $product['quantity_in_stock'] <= $product['reorder_level'] ? 'stock-warning' : 'stock-ok'; ?>">
-                                            <?php echo $product['quantity_in_stock']; ?>
-                                        </span>
-                                    </td>
-                                    <td>$<?php echo number_format($product['unit_price'], 2); ?></td>
-                                    <td><?php echo $product['reorder_level']; ?></td>
-                                    <td>
-                                        <a href="../stock/movements/index.php?product_id=<?php echo $product['product_id']; ?>" 
-                                           class="btn btn-sm btn-info">
-                                            <?php echo $product['movement_count']; ?> movements
-                                        </a>
-                                    </td>
-                                    <?php if ($can_manage_products): ?>
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-primary" 
-                                                onclick="editProduct(<?php echo $product['product_id']; ?>)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-danger" 
-                                                onclick="deleteProduct(<?php echo $product['product_id']; ?>)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                    <?php endif; ?>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+        <!-- Products Tabs -->
+        <ul class="nav nav-tabs mb-4" id="productTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="out-products-tab" data-bs-toggle="tab" data-bs-target="#outProducts" type="button" role="tab">
+                    <i class="bi bi-box-seam me-2"></i>OUT Products (Active)
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="in-products-tab" data-bs-toggle="tab" data-bs-target="#inProducts" type="button" role="tab">
+                    <i class="bi bi-archive me-2"></i>IN Products (Reserved)
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="productTabsContent">
+            <!-- OUT Products Tab -->
+            <div class="tab-pane fade show active" id="outProducts" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="outProductsTable" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>OUT Stock</th>
+                                        <th>Unit Price</th>
+                                        <th>OUT Threshold</th>
+                                        <th>IN Threshold</th>
+                                        <th>Movements</th>
+                                        <?php if ($can_manage_products): ?>
+                                        <th>Actions</th>
+                                        <?php endif; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($products as $product): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($product['sku']); ?></td>
+                                            <td>
+                                                <?php if ($product['image_url']): ?>
+                                                    <img src="../../<?php echo htmlspecialchars($product['image_url']); ?>" 
+                                                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                                         class="product-img">
+                                                <?php else: ?>
+                                                    <img src="../../assets/images/no-image.svg" 
+                                                         alt="No image"
+                                                         class="product-img">
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($product['category_name']); ?></td>
+                                            <td>
+                                                <span class="<?php echo $product['out_stock_quantity'] <= $product['out_threshold_amount'] ? 'stock-warning' : 'stock-ok'; ?>">
+                                                    <?php echo $product['out_stock_quantity']; ?>
+                                                </span>
+                                            </td>
+                                            <td>$<?php echo number_format($product['unit_price'], 2); ?></td>
+                                            <td><?php echo $product['out_threshold_amount']; ?></td>
+                                            <td><?php echo $product['in_threshold_amount']; ?></td>
+                                            <td>
+                                                <a href="../stock/movements/index.php?product_id=<?php echo $product['product_id']; ?>" 
+                                                    class="btn btn-sm btn-info">
+                                                    <i class="bi bi-clock-history"></i> View Movements
+                                                </a>
+                                            </td>
+                                            <?php if ($can_manage_products): ?>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        onclick="moveOutToIn(<?php echo $product['product_id']; ?>)">
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-primary" 
+                                                        onclick="editProduct(<?php echo $product['product_id']; ?>)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            </td>
+                                            <?php endif; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IN Products Tab -->
+            <div class="tab-pane fade" id="inProducts" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="inProductsTable" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Image</th>
+                                        <th>Name</th>
+                                        <th>Category</th>
+                                        <th>IN Stock</th>
+                                        <th>Unit Price</th>
+                                        <th>Reorder Level</th>
+                                        <th>IN Threshold</th>
+                                        <th>Movements</th>
+                                        <?php if ($can_manage_products): ?>
+                                        <th>Actions</th>
+                                        <?php endif; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($products as $product): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($product['sku']); ?></td>
+                                            <td>
+                                                <?php if ($product['image_url']): ?>
+                                                    <img src="../../<?php echo htmlspecialchars($product['image_url']); ?>" 
+                                                         alt="<?php echo htmlspecialchars($product['name']); ?>"
+                                                         class="product-img">
+                                                <?php else: ?>
+                                                    <img src="../../assets/images/no-image.svg" 
+                                                         alt="No image"
+                                                         class="product-img">
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($product['name']); ?></td>
+                                            <td><?php echo htmlspecialchars($product['category_name']); ?></td>
+                                            <td>
+                                                <span class="<?php echo $product['in_stock_quantity'] <= $product['reorder_level'] ? 'stock-warning' : 'stock-ok'; ?>">
+                                                    <?php echo $product['in_stock_quantity']; ?>
+                                                </span>
+                                            </td>
+                                            <td>$<?php echo number_format($product['unit_price'], 2); ?></td>
+                                            <td><?php echo $product['reorder_level']; ?></td>
+                                            <td><?php echo $product['in_threshold_amount']; ?></td>
+                                            <td>
+                                                <a href="../stock/movements/index.php?product_id=<?php echo $product['product_id']; ?>" 
+                                                    class="btn btn-sm btn-info">
+                                                    <i class="bi bi-clock-history"></i> View Movements
+                                                </a>
+                                            </td>
+                                            <?php if ($can_manage_products): ?>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-success" 
+                                                        onclick="moveInToOut(<?php echo $product['product_id']; ?>)">
+                                                    <i class="bi bi-arrow-left"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-primary" 
+                                                        onclick="editProduct(<?php echo $product['product_id']; ?>)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            </td>
+                                            <?php endif; ?>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -154,69 +286,136 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
 <?php if ($can_manage_products): ?>
 <!-- Add Product Modal -->
 <div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Add New Product</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="addProductForm" class="needs-validation" novalidate>
-                    <div class="mb-3">
-                        <label for="sku" class="form-label">SKU</label>
-                        <input type="text" class="form-control" id="sku" name="sku" required>
-                        <div class="invalid-feedback">Please enter SKU</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                        <div class="invalid-feedback">Please enter product name</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="category_id" class="form-label">Category</label>
-                        <select class="form-select" id="category_id" name="category_id" required>
-                            <option value="">Select Category</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo $category['category_id']; ?>">
-                                    <?php echo htmlspecialchars($category['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="invalid-feedback">Please select a category</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="unit_price" class="form-label">Unit Price</label>
-                        <input type="number" class="form-control" id="unit_price" name="unit_price" 
-                               step="0.01" min="0" required>
-                        <div class="invalid-feedback">Please enter unit price</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="initial_stock" class="form-label">Initial Stock</label>
-                        <input type="number" class="form-control" id="initial_stock" name="initial_stock" 
-                               min="0" required>
-                        <div class="invalid-feedback">Please enter initial stock</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="reorder_level" class="form-label">Reorder Level</label>
-                        <input type="number" class="form-control" id="reorder_level" name="reorder_level" 
-                               min="0" required>
-                        <div class="invalid-feedback">Please enter reorder level</div>
+                <form id="addProductForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Product Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="sku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="sku" name="sku" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="category_id" class="form-label">Category</label>
+                                <select class="form-control" id="category_id" name="category_id" required>
+                                    <option value="">Select Category</option>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo $category['category_id']; ?>">
+                                            <?php echo htmlspecialchars($category['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="unit_price" class="form-label">Unit Price</label>
+                                <input type="number" class="form-control" id="unit_price" name="unit_price" step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="initial_stock" class="form-label">Initial IN Stock</label>
+                                <input type="number" class="form-control" id="initial_stock" name="initial_stock" min="0" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reorder_level" class="form-label">Reorder Level</label>
+                                <input type="number" class="form-control" id="reorder_level" name="reorder_level" min="0" required>
+                                <small class="text-muted">Minimum stock level before reordering</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="in_threshold_amount" class="form-label">IN Stock Threshold</label>
+                                <input type="number" class="form-control" id="in_threshold_amount" name="in_threshold_amount" min="0" required>
+                                <small class="text-muted">Minimum IN stock level before alert</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="out_threshold_amount" class="form-label">OUT Stock Threshold</label>
+                                <input type="number" class="form-control" id="out_threshold_amount" name="out_threshold_amount" min="0" required>
+                                <small class="text-muted">Minimum OUT stock level before alert</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="image" class="form-label">Product Image</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                            </div>
+                            <div id="imagePreview" class="mt-2 d-none">
+                                <img src="" alt="Preview" class="img-thumbnail" style="max-width: 200px;">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move IN to OUT Modal -->
+<div class="modal fade" id="moveInToOutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Move Stock (IN to OUT)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="moveInToOutForm">
+                    <input type="hidden" id="move_in_to_out_product_id">
+                    <div class="mb-3">
+                        <label for="move_in_to_out_quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="move_in_to_out_quantity" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="move_in_to_out_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="move_in_to_out_notes" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitMoveInToOut()">Move Stock</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Move OUT to IN Modal -->
+<div class="modal fade" id="moveOutToInModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Move Stock (OUT to IN)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="moveOutToInForm">
+                    <input type="hidden" id="move_out_to_in_product_id">
+                    <div class="mb-3">
+                        <label for="move_out_to_in_quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="move_out_to_in_quantity" required min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="move_out_to_in_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="move_out_to_in_notes" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitMoveOutToIn()">Move Stock</button>
             </div>
         </div>
     </div>
@@ -231,7 +430,7 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="editProductForm" class="needs-validation" novalidate>
+                <form id="editProductForm" class="needs-validation" novalidate enctype="multipart/form-data">
                     <input type="hidden" id="edit_product_id">
                     <div class="mb-3">
                         <label for="edit_sku" class="form-label">SKU</label>
@@ -243,6 +442,23 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
                         <label for="edit_name" class="form-label">Name</label>
                         <input type="text" class="form-control" id="edit_name" name="name" required>
                         <div class="invalid-feedback">Please enter product name</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_image" class="form-label">Product Image</label>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <img id="current_image" src="" alt="Current product image" 
+                                 style="max-width: 100px; max-height: 100px; display: none;" 
+                                 class="border rounded">
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="removeImage()" style="display: none;" 
+                                    id="remove_image_btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" id="edit_image" name="image" accept="image/*">
+                        <input type="hidden" id="remove_image" name="remove_image" value="0">
+                        <small class="text-muted">Maximum file size: 10MB. Recommended max dimensions: 2000x2000px. Supported formats: JPG, PNG, GIF</small>
                     </div>
 
                     <div class="mb-3">
@@ -271,10 +487,24 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
                     </div>
 
                     <div class="mb-3">
-                        <label for="edit_reorder_level" class="form-label">Reorder Level</label>
-                        <input type="number" class="form-control" id="edit_reorder_level" name="reorder_level" 
+                        <label for="edit_in_reorder_level" class="form-label">IN Stock Reorder Level</label>
+                        <input type="number" class="form-control" id="edit_in_reorder_level" name="in_reorder_level" 
                                min="0" required>
                         <div class="invalid-feedback">Please enter reorder level</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_in_threshold_amount" class="form-label">IN Stock Threshold</label>
+                        <input type="number" class="form-control" id="edit_in_threshold_amount" name="in_threshold_amount" 
+                               min="0" required>
+                        <div class="invalid-feedback">Please enter IN stock threshold</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_out_threshold_amount" class="form-label">OUT Stock Threshold</label>
+                        <input type="number" class="form-control" id="edit_out_threshold_amount" name="out_threshold_amount" 
+                               min="0" required>
+                        <div class="invalid-feedback">Please enter OUT stock threshold</div>
                     </div>
                 </form>
             </div>
@@ -299,94 +529,201 @@ $low_stock_count = fetchValue("SELECT COUNT(*) FROM products WHERE quantity_in_s
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    $('#productsTable').DataTable({
-        "order": [[1, "asc"]],
-        "pageLength": 25
+    // Initialize DataTables
+    $('#outProductsTable, #inProductsTable').DataTable({
+        order: [[2, 'asc']], // Sort by name by default
+        pageLength: 25,
+        responsive: true
     });
-});
 
-function saveProduct() {
-    const form = document.getElementById('addProductForm');
-    if (form.checkValidity()) {
-        const formData = {
-            sku: $('#sku').val(),
-            name: $('#name').val(),
-            category_id: $('#category_id').val(),
-            description: $('#description').val(),
-            unit_price: $('#unit_price').val(),
-            quantity_in_stock: $('#initial_stock').val(),
-            reorder_level: $('#reorder_level').val()
-        };
-
-        $.ajax({
-            url: 'ajax/save_product.php',
-            method: 'POST',
-            data: formData,
-            success: function(response) {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Product saved successfully'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    throw new Error(response.error || 'Failed to save product');
-                }
-            },
-            error: function(xhr) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: xhr.responseJSON?.error || 'Failed to save product'
-                });
-            }
-        });
-    }
-    form.classList.add('was-validated');
-}
-
-function editProduct(productId) {
-    $.get('ajax/get_product.php', { id: productId }, function(response) {
-        if (response.success) {
-            const product = response.data;
-            $('#edit_product_id').val(product.product_id);
-            $('#edit_sku').val(product.sku);
-            $('#edit_name').val(product.name);
-            $('#edit_category_id').val(product.category_id);
-            $('#edit_description').val(product.description);
-            $('#edit_unit_price').val(product.unit_price);
-            $('#edit_reorder_level').val(product.reorder_level);
-            $('#editProductModal').modal('show');
-        } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: response.error || 'Failed to load product details'
-            });
+    // Image preview for add/edit product
+    $('#image').change(function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#imagePreview').removeClass('d-none').find('img').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
     });
+
+    // Initialize Bootstrap modals
+    const moveInToOutModal = new bootstrap.Modal(document.getElementById('moveInToOutModal'));
+    const moveOutToInModal = new bootstrap.Modal(document.getElementById('moveOutToInModal'));
+
+    // Make modals available globally
+    window.moveInToOutModal = moveInToOutModal;
+    window.moveOutToInModal = moveOutToInModal;
+});
+
+// Save new product
+function saveProduct() {
+    const form = document.getElementById('addProductForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    
+    fetch('ajax/save_product.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Product added successfully');
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to add product');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the product');
+    });
+}
+
+// Move stock functions
+function moveInToOut(productId) {
+    $('#move_in_to_out_product_id').val(productId);
+    $('#move_in_to_out_quantity').val('');
+    $('#move_in_to_out_notes').val('');
+    window.moveInToOutModal.show();
+}
+
+function moveOutToIn(productId) {
+    $('#move_out_to_in_product_id').val(productId);
+    $('#move_out_to_in_quantity').val('');
+    $('#move_out_to_in_notes').val('');
+    window.moveOutToInModal.show();
+}
+
+function submitMoveInToOut() {
+    const form = document.getElementById('moveInToOutForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const data = {
+        product_id: $('#move_in_to_out_product_id').val(),
+        quantity: $('#move_in_to_out_quantity').val(),
+        notes: $('#move_in_to_out_notes').val()
+    };
+
+    fetch('ajax/move_in_to_out.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.moveInToOutModal.hide();
+            alert('Stock moved successfully');
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to move stock');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while moving stock');
+    });
+}
+
+function submitMoveOutToIn() {
+    const form = document.getElementById('moveOutToInForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const data = {
+        product_id: $('#move_out_to_in_product_id').val(),
+        quantity: $('#move_out_to_in_quantity').val(),
+        notes: $('#move_out_to_in_notes').val()
+    };
+
+    fetch('ajax/move_out_to_in.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.moveOutToInModal.hide();
+            alert('Stock moved successfully');
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to move stock');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while moving stock');
+    });
+}
+
+// Edit product
+function editProduct(productId) {
+    fetch(`ajax/get_product.php?id=${productId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const product = data.product;
+                $('#edit_product_id').val(product.product_id);
+                $('#edit_sku').val(product.sku);
+                $('#edit_name').val(product.name);
+                $('#edit_description').val(product.description);
+                $('#edit_category_id').val(product.category_id);
+                $('#edit_unit_price').val(product.unit_price);
+                $('#edit_in_reorder_level').val(product.in_reorder_level);
+                
+                if (product.image_url) {
+                    $('#editImagePreview').removeClass('d-none')
+                        .find('img').attr('src', '../../' + product.image_url);
+                } else {
+                    $('#editImagePreview').addClass('d-none');
+                }
+                
+                $('#editProductModal').modal('show');
+            } else {
+                alert(data.error || 'Failed to load product details');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while loading product details');
+        });
+}
+
+function removeImage() {
+    $('#current_image').hide();
+    $('#remove_image_btn').hide();
+    $('#remove_image').val('1');
 }
 
 function updateProduct() {
     const form = document.getElementById('editProductForm');
     if (form.checkValidity()) {
-        const formData = {
-            product_id: $('#edit_product_id').val(),
-            sku: $('#edit_sku').val(),
-            name: $('#edit_name').val(),
-            category_id: $('#edit_category_id').val(),
-            description: $('#edit_description').val(),
-            unit_price: $('#edit_unit_price').val(),
-            reorder_level: $('#edit_reorder_level').val()
-        };
+        const formData = new FormData(form);
+        formData.append('product_id', $('#edit_product_id').val());
 
         $.ajax({
             url: 'ajax/update_product.php',
             method: 'POST',
             data: formData,
+            processData: false,
+            contentType: false,
             success: function(response) {
                 if (response.success) {
                     Swal.fire({

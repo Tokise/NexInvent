@@ -33,7 +33,7 @@ if (!hasPermission('manage_inventory')) {
 
 try {
     // Validate required fields
-    $required_fields = ['sku', 'name', 'category_id', 'quantity', 'unit_price', 'reorder_level'];
+    $required_fields = ['sku', 'name', 'category_id', 'in_stock_quantity', 'unit_price', 'reorder_level'];
     foreach ($required_fields as $field) {
         if (empty($_POST[$field])) {
             throw new Exception("$field is required");
@@ -41,8 +41,8 @@ try {
     }
 
     // Validate numeric fields
-    if (!is_numeric($_POST['quantity']) || $_POST['quantity'] < 0) {
-        throw new Exception('Quantity must be a non-negative number');
+    if (!is_numeric($_POST['in_stock_quantity']) || $_POST['in_stock_quantity'] < 0) {
+        throw new Exception('In stock quantity must be a non-negative number');
     }
     if (!is_numeric($_POST['unit_price']) || $_POST['unit_price'] < 0) {
         throw new Exception('Unit price must be a non-negative number');
@@ -74,7 +74,7 @@ try {
         'description' => trim($_POST['description'] ?? ''),
         'category_id' => $_POST['category_id'],
         'unit_price' => $_POST['unit_price'],
-        'quantity_in_stock' => $_POST['quantity'],
+        'in_stock_quantity' => $_POST['in_stock_quantity'],
         'reorder_level' => $_POST['reorder_level'],
         'created_by' => getCurrentUserId(),
         'updated_by' => getCurrentUserId()
@@ -83,11 +83,11 @@ try {
     $product_id = insert('products', $product_data);
 
     // Create initial stock movement if quantity > 0
-    if ($_POST['quantity'] > 0) {
+    if ($_POST['in_stock_quantity'] > 0) {
         $movement_data = [
             'product_id' => $product_id,
             'user_id' => getCurrentUserId(),
-            'quantity' => $_POST['quantity'],
+            'quantity' => $_POST['in_stock_quantity'],
             'type' => 'initial',
             'notes' => 'Initial stock'
         ];

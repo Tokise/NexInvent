@@ -18,22 +18,23 @@ if (hasPermission('view_products')) {
 
 // Get total sales
 if (hasPermission('view_sales')) {
-    $sql = "SELECT COUNT(*) FROM sales_orders";
+    $sql = "SELECT COUNT(*) FROM sales WHERE payment_status = 'completed'";
     $totalSales = fetchValue($sql);
 }
 
 // Get monthly revenue
 if (hasPermission('view_sales')) {
     $currentMonth = date('Y-m');
-    $sql = "SELECT COALESCE(SUM(total_amount), 0) FROM sales_orders 
-            WHERE DATE_FORMAT(created_at, '%Y-%m') = ?";
+    $sql = "SELECT COALESCE(SUM(total_amount), 0) FROM sales 
+            WHERE DATE_FORMAT(created_at, '%Y-%m') = ? 
+            AND payment_status = 'completed'";
     $monthlyRevenue = fetchValue($sql, [$currentMonth]);
 }
 
 // Get low stock items
 if (hasPermission('view_inventory')) {
     $sql = "SELECT COUNT(*) FROM products 
-            WHERE quantity_in_stock <= reorder_level";
+            WHERE in_stock_quantity <= reorder_level OR out_stock_quantity <= out_threshold_amount";
     $lowStock = fetchValue($sql);
 }
 
@@ -55,12 +56,13 @@ if (hasPermission('view_products')) {
 // Recent sales
 if (hasPermission('view_sales')) {
     $sql = "SELECT 'sale' as type, sale_id as id, 
-            CONCAT('Order #', sale_id) as title,
+            CONCAT('Sale #', sale_id) as title,
             CONCAT('Sale completed for $', total_amount) as description, 
             created_at,
-            user_id as user_id,
-            (SELECT full_name FROM users WHERE user_id = sales_orders.user_id) as user_name
-            FROM sales_orders 
+            cashier_id as user_id,
+            (SELECT full_name FROM users WHERE user_id = sales.cashier_id) as user_name
+            FROM sales 
+            WHERE payment_status = 'completed'
             ORDER BY created_at DESC LIMIT 5";
     $recentSales = fetchAll($sql);
     $recentActivities = array_merge($recentActivities, $recentSales);
@@ -112,8 +114,9 @@ if (hasPermission('view_sales')) {
         $month = date('Y-m', strtotime("-$i months"));
         $monthName = date('M', strtotime("-$i months"));
         
-        $sql = "SELECT COALESCE(SUM(total_amount), 0) FROM sales_orders 
-                WHERE DATE_FORMAT(created_at, '%Y-%m') = ?";
+        $sql = "SELECT COALESCE(SUM(total_amount), 0) FROM sales 
+                WHERE DATE_FORMAT(created_at, '%Y-%m') = ? 
+                AND payment_status = 'completed'";
         $monthlySales = fetchValue($sql, [$month]);
         
         $salesChartData[] = $monthlySales;
@@ -375,7 +378,7 @@ if (hasPermission('view_products')) {
                                     <p class="mb-0">
                                         <strong>SKU:</strong> <?php echo htmlspecialchars($product['sku']); ?> | 
                                         <strong>Price:</strong> $<?php echo number_format($product['unit_price'], 2); ?> | 
-                                        <strong>Stock:</strong> <?php echo $product['quantity_in_stock']; ?>
+                                        <strong>Stock:</strong> <?php echo $product['in_stock_quantity']; ?>
                                     </p>
                                 </div>
                             <?php endforeach; ?>

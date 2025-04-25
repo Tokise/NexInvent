@@ -64,6 +64,107 @@ $sql = "SELECT a.*, e.full_name as employee_name
         JOIN employee_details e ON a.employee_id = e.employee_id 
         ORDER BY a.date DESC, e.full_name";
 $attendance_records = fetchAll($sql);
+
+// Get attendance records for an employee
+function getEmployeeAttendance($employeeId, $startDate = null, $endDate = null) {
+    if (!$startDate) $startDate = date('Y-m-d', strtotime('-30 days'));
+    if (!$endDate) $endDate = date('Y-m-d');
+    
+    $sql = "SELECT a.*, e.position, u.full_name 
+            FROM attendance a
+            JOIN employee_details e ON a.employee_id = e.employee_id
+            JOIN users u ON e.user_id = u.user_id
+            WHERE a.employee_id = ? AND a.date BETWEEN ? AND ?
+            ORDER BY a.date DESC, a.time_in DESC";
+    
+    return fetchAll($sql, [$employeeId, $startDate, $endDate]);
+}
+
+// Record time in
+function recordTimeIn($employeeId) {
+    $today = date('Y-m-d');
+    
+    // Check if already clocked in today
+    $sql = "SELECT attendance_id FROM attendance 
+            WHERE employee_id = ? AND date = ?";
+    $existing = fetchOne($sql, [$employeeId, $today]);
+    
+    if ($existing) {
+        throw new Exception("Already clocked in for today");
+    }
+    
+    $data = [
+        'employee_id' => $employeeId,
+        'date' => $today,
+        'time_in' => date('Y-m-d H:i:s'),
+        'status' => 'present'
+    ];
+    
+    return insert('attendance', $data);
+}
+
+// Record time out
+function recordTimeOut($employeeId) {
+    $today = date('Y-m-d');
+    
+    // Get today's attendance record
+    $sql = "SELECT attendance_id FROM attendance 
+            WHERE employee_id = ? AND date = ? AND time_out IS NULL";
+    $record = fetchOne($sql, [$employeeId, $today]);
+    
+    if (!$record) {
+        throw new Exception("No active attendance record found for today");
+    }
+    
+    $sql = "UPDATE attendance SET 
+            time_out = ?, 
+            updated_at = CURRENT_TIMESTAMP 
+            WHERE attendance_id = ?";
+    
+    return executeQuery($sql, [date('Y-m-d H:i:s'), $record['attendance_id']]);
+}
+
+// Get attendance summary for a date range
+function getAttendanceSummary($startDate = null, $endDate = null) {
+    if (!$startDate) $startDate = date('Y-m-d', strtotime('-30 days'));
+    if (!$endDate) $endDate = date('Y-m-d');
+    
+    $sql = "SELECT 
+                e.department,
+                COUNT(*) as total_records,
+                SUM(CASE WHEN a.status = 'present' THEN 1 ELSE 0 END) as present_count,
+                SUM(CASE WHEN a.status = 'absent' THEN 1 ELSE 0 END) as absent_count,
+                SUM(CASE WHEN a.status = 'late' THEN 1 ELSE 0 END) as late_count
+            FROM attendance a
+            JOIN employee_details e ON a.employee_id = e.employee_id
+            WHERE a.date BETWEEN ? AND ?
+            GROUP BY e.department";
+    
+    return fetchAll($sql, [$startDate, $endDate]);
+}
+
+// Mark employee as absent
+function markAbsent($employeeId, $date = null, $notes = '') {
+    if (!$date) $date = date('Y-m-d');
+    
+    // Check if attendance already recorded for this date
+    $sql = "SELECT attendance_id FROM attendance 
+            WHERE employee_id = ? AND date = ?";
+    $existing = fetchOne($sql, [$employeeId, $date]);
+    
+    if ($existing) {
+        throw new Exception("Attendance already recorded for this date");
+    }
+    
+    $data = [
+        'employee_id' => $employeeId,
+        'date' => $date,
+        'status' => 'absent',
+        'notes' => $notes
+    ];
+    
+    return insert('attendance', $data);
+}
 ?>
 
 <!DOCTYPE html>

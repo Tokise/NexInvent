@@ -20,7 +20,7 @@ $sql = "SELECT p.*, c.name as category_name
 $inventory_items = fetchAll($sql);
 
 // Fetch low stock items
-$sql = "SELECT COUNT(*) FROM products WHERE quantity_in_stock <= reorder_level";
+$sql = "SELECT COUNT(*) FROM products WHERE in_stock_quantity <= reorder_level";
 $low_stock_count = fetchValue($sql);
 
 // Get user permissions for UI rendering
@@ -41,6 +41,24 @@ $can_manage_inventory = hasPermission('manage_inventory');
     <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add styles after the Google Fonts link -->
+    <style>
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .stock-warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .stock-ok {
+            color: #198754;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
 
@@ -51,73 +69,110 @@ $can_manage_inventory = hasPermission('manage_inventory');
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Stock Management</h2>
             <div>
+                <a href="pending_additions.php" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-box-seam"></i> Pending Additions
+                </a>
                 <a href="movements/index.php" class="btn btn-outline-primary me-2">
                     <i class="bi bi-clock-history"></i> Movement History
                 </a>
             </div>
         </div>
 
-        <!-- Inventory Summary Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
+        <!-- Stock Overview Cards -->
+        <div class="row mb-4">
+            <div class="col-md-6">
                 <div class="card bg-primary text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Total Items</h5>
-                        <h3 class="mb-0"><?php echo count($inventory_items); ?></h3>
+                        <h5 class="card-title">TOTAL ITEMS</h5>
+                        <h2 class="mb-0"><?php echo count($inventory_items); ?></h2>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
                 <div class="card bg-danger text-white">
                     <div class="card-body">
-                        <h5 class="card-title">Low Stock Items</h5>
-                        <h3 class="mb-0"><?php echo $low_stock_count; ?></h3>
+                        <h5 class="card-title">LOW STOCK ITEMS</h5>
+                        <h2 class="mb-0"><?php echo $low_stock_count; ?></h2>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Inventory Table -->
+        <!-- Stock Items Table -->
         <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Stock Items</h5>
+            </div>
             <div class="card-body">
-                <table id="inventoryTable" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>SKU</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Stock Level</th>
-                            <th>Unit Price</th>
-                            <th>Total Value</th>
-                            <?php if ($can_manage_inventory): ?>
-                            <th>Actions</th>
-                            <?php endif; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($inventory_items as $item): ?>
+                <div class="table-responsive">
+                    <table id="stockItemsTable" class="table table-hover">
+                        <thead>
                             <tr>
-                                <td><?php echo htmlspecialchars($item['sku']); ?></td>
-                                <td><?php echo htmlspecialchars($item['name']); ?></td>
-                                <td><?php echo htmlspecialchars($item['category_name']); ?></td>
-                                <td>
-                                    <span class="<?php echo $item['quantity_in_stock'] <= $item['reorder_level'] ? 'stock-warning' : 'stock-ok'; ?>">
-                                        <?php echo $item['quantity_in_stock']; ?>
-                                    </span>
-                                </td>
-                                <td>$<?php echo number_format($item['unit_price'], 2); ?></td>
-                                <td>$<?php echo number_format($item['unit_price'] * $item['quantity_in_stock'], 2); ?></td>
+                                <th>SKU</th>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>IN Stock</th>
+                                <th>OUT Stock</th>
+                                <th>Unit Price</th>
+                                <th>Total Value</th>
+                                <th>Status</th>
                                 <?php if ($can_manage_inventory): ?>
-                                <td>
-                                    <button class="btn btn-sm btn-success" onclick="adjustStock(<?php echo $item['product_id']; ?>)">
-                                        <i class="bi bi-arrow-left-right"></i> Adjust Stock
-                                    </button>
-                                </td>
+                                <th>Actions</th>
                                 <?php endif; ?>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($inventory_items as $item): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($item['sku']); ?></td>
+                                    <td>
+                                        <?php if ($item['image_url']): ?>
+                                            <img src="../../<?php echo htmlspecialchars($item['image_url']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($item['name']); ?>"
+                                                 class="product-img">
+                                        <?php else: ?>
+                                            <img src="../../assets/images/no-image.svg" 
+                                                 alt="No image"
+                                                 class="product-img">
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo htmlspecialchars($item['name']); ?></td>
+                                    <td><?php echo htmlspecialchars($item['category_name']); ?></td>
+                                    <td>
+                                        <span class="<?php echo $item['in_stock_quantity'] <= $item['reorder_level'] ? 'stock-warning' : 'stock-ok'; ?>">
+                                            <?php echo $item['in_stock_quantity']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="<?php echo $item['out_stock_quantity'] <= $item['out_threshold_amount'] ? 'stock-warning' : 'stock-ok'; ?>">
+                                            <?php echo $item['out_stock_quantity']; ?>
+                                        </span>
+                                    </td>
+                                    <td>$<?php echo number_format($item['unit_price'], 2); ?></td>
+                                    <td>$<?php echo number_format($item['unit_price'] * ($item['in_stock_quantity'] + $item['out_stock_quantity']), 2); ?></td>
+                                    <td>
+                                        <?php if ($item['in_stock_quantity'] <= $item['reorder_level']): ?>
+                                            <span class="badge bg-danger">Low Stock</span>
+                                        <?php else: ?>
+                                            <span class="badge bg-success">In Stock</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <?php if ($can_manage_inventory): ?>
+                                    <td>
+                                        <button class="btn btn-sm btn-success" onclick="adjustStock(<?php echo $item['product_id']; ?>)">
+                                            <i class="bi bi-arrow-left-right"></i> Adjust Stock
+                                        </button>
+                                        <a href="movements/index.php?product_id=<?php echo $item['product_id']; ?>" class="btn btn-sm btn-info">
+                                            <i class="bi bi-clock-history"></i> History
+                                        </a>
+                                    </td>
+                                    <?php endif; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -138,8 +193,8 @@ $can_manage_inventory = hasPermission('manage_inventory');
                     <div class="mb-3">
                         <label for="adjustment_type" class="form-label">Adjustment Type</label>
                         <select class="form-control" id="adjustment_type" required>
-                            <option value="add">Add Stock</option>
-                            <option value="remove">Remove Stock</option>
+                            <option value="in">Add Stock</option>
+                            <option value="out">Remove Stock</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -174,26 +229,11 @@ $can_manage_inventory = hasPermission('manage_inventory');
 <script>
 $(document).ready(function() {
     // Initialize DataTable
-    $('#inventoryTable').DataTable({
-        "order": [[1, "asc"]],
+    $('#stockItemsTable').DataTable({
+        "order": [[2, "asc"]],
         "pageLength": 25
     });
-
-    // Load categories for the add item form
-    loadCategories();
 });
-
-function loadCategories() {
-    $.get('ajax/get_categories.php', function(response) {
-        if (response.error) {
-            showError('Failed to load categories: ' + response.error);
-            return;
-        }
-        $('#category').html(response);
-    }).fail(function() {
-        showError('Failed to load categories');
-    });
-}
 
 function adjustStock(productId) {
     // Reset form
@@ -205,19 +245,27 @@ function adjustStock(productId) {
 function saveStockAdjustment() {
     const formData = {
         product_id: $('#adjust_product_id').val(),
-        type: $('#adjustment_type').val() === 'add' ? 'in' : 'out',
+        type: $('#adjustment_type').val(),
         quantity: $('#adjustment_quantity').val(),
         reason: $('#adjustment_reason').val()
     };
 
     // Validate required fields
     if (!formData.quantity || !formData.reason) {
-        showError('Please fill in all required fields');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Please fill in all required fields'
+        });
         return;
     }
 
     if (parseFloat(formData.quantity) <= 0) {
-        showError('Quantity must be greater than zero');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Quantity must be greater than zero'
+        });
         return;
     }
 
@@ -230,51 +278,35 @@ function saveStockAdjustment() {
         }
     });
 
+    // Send AJAX request
     $.ajax({
         url: 'ajax/adjust_stock.php',
-        type: 'POST',
+        method: 'POST',
         data: formData,
-        dataType: 'json'
-    })
-    .done(function(response) {
-        if (response.success) {
+        success: function(response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Stock adjustment saved successfully'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.error || 'Failed to adjust stock'
+                });
+            }
+        },
+        error: function() {
             Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: response.message,
-                showConfirmButton: false,
-                timer: 1500
-            }).then(() => {
-                $('#adjustStockModal').modal('hide');
-                location.reload();
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to communicate with the server'
             });
-        } else {
-            showError(response.error || 'Failed to adjust stock');
         }
-    })
-    .fail(function(xhr) {
-        let errorMessage = 'Failed to adjust stock';
-        try {
-            const response = JSON.parse(xhr.responseText);
-            errorMessage = response.error || errorMessage;
-        } catch (e) {
-            console.error('Error parsing response:', e);
-        }
-        showError(errorMessage);
-    })
-    .always(function() {
-        if (Swal.isLoading()) {
-            Swal.close();
-        }
-    });
-}
-
-function showError(message) {
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: message,
-        confirmButtonText: 'OK'
     });
 }
 </script>

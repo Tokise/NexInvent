@@ -17,7 +17,7 @@ $user = null;
 
 if (isset($_GET['employee_id'])) {
     $sql = "SELECT * FROM employee_details WHERE employee_id = ?";
-    $employee = fetchOne($sql, [$_GET['employee_id']]);
+    $employee = fetchRow($sql, [$_GET['employee_id']]);
 
     if (!$employee) {
         $_SESSION['error'] = "Employee not found";
@@ -37,7 +37,7 @@ if (isset($_GET['employee_id'])) {
             FROM users u 
             JOIN employee_details e ON u.user_id = e.user_id 
             WHERE u.user_id = ?";
-    $data = fetchOne($sql, [$_GET['user_id']]);
+    $data = fetchRow($sql, [$_GET['user_id']]);
     
     if (!$data) {
         $_SESSION['error'] = "User not found";
@@ -148,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'username' => $username,
                     'password' => password_hash($password, PASSWORD_DEFAULT),
                     'email' => $email,
-                    'full_name' => $employee ? $employee['full_name'] : $full_name,
+                    'full_name' => $employee ? $employee['temp_name'] : $full_name,
                     'role' => $role,
                     'status' => 'active',
                     'created_at' => date('Y-m-d H:i:s'),
@@ -214,7 +214,7 @@ $page_title = $user ? "Edit Staff Account" : "Create Staff Account";
                         <div class="card-body">
                             <?php if ($employee): ?>
                                 <div class="alert alert-info">
-                                    <strong>Creating account for:</strong> <?php echo htmlspecialchars($employee['full_name']); ?><br>
+                                    <strong>Creating account for:</strong> <?php echo htmlspecialchars($employee['temp_name']); ?><br>
                                     <strong>Position:</strong> <?php echo htmlspecialchars($employee['position']); ?><br>
                                     <strong>Department:</strong> <?php echo htmlspecialchars($employee['department']); ?>
                                 </div>

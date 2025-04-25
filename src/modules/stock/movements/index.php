@@ -19,7 +19,7 @@ $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
 
 // Build query
-$sql = "SELECT sm.*, p.name as product_name, p.sku, u.username 
+$sql = "SELECT sm.*, p.name as product_name, p.sku, p.image_url, u.username 
         FROM stock_movements sm 
         JOIN products p ON sm.product_id = p.product_id 
         JOIN users u ON sm.user_id = u.user_id 
@@ -108,12 +108,12 @@ $products = fetchAll("SELECT product_id, name, sku FROM products ORDER BY name")
                         <label for="type" class="form-label">Movement Type</label>
                         <select class="form-select" id="type" name="type">
                             <option value="">All Types</option>
-                            <option value="initial" <?php echo $type === 'initial' ? 'selected' : ''; ?>>Initial</option>
-                            <option value="add" <?php echo $type === 'add' ? 'selected' : ''; ?>>Add</option>
-                            <option value="remove" <?php echo $type === 'remove' ? 'selected' : ''; ?>>Remove</option>
-                            <option value="sale" <?php echo $type === 'sale' ? 'selected' : ''; ?>>Sale</option>
-                            <option value="purchase" <?php echo $type === 'purchase' ? 'selected' : ''; ?>>Purchase</option>
-                            <option value="adjustment" <?php echo $type === 'adjustment' ? 'selected' : ''; ?>>Adjustment</option>
+                            <option value="in_initial" <?php echo $type === 'in_initial' ? 'selected' : ''; ?>>Initial Stock</option>
+                            <option value="in_purchase" <?php echo $type === 'in_purchase' ? 'selected' : ''; ?>>Purchase</option>
+                            <option value="in_to_out" <?php echo $type === 'in_to_out' ? 'selected' : ''; ?>>IN to OUT</option>
+                            <option value="out_to_in" <?php echo $type === 'out_to_in' ? 'selected' : ''; ?>>OUT to IN</option>
+                            <option value="out_sale" <?php echo $type === 'out_sale' ? 'selected' : ''; ?>>Sale</option>
+                            <option value="out_adjustment" <?php echo $type === 'out_adjustment' ? 'selected' : ''; ?>>Adjustment</option>
                         </select>
                     </div>
                     
@@ -149,6 +149,7 @@ $products = fetchAll("SELECT product_id, name, sku FROM products ORDER BY name")
                     <thead>
                         <tr>
                             <th>Date & Time</th>
+                            <th>Product Image</th>
                             <th>Product</th>
                             <th>Type</th>
                             <th>Quantity</th>
@@ -160,8 +161,31 @@ $products = fetchAll("SELECT product_id, name, sku FROM products ORDER BY name")
                         <?php foreach ($movements as $movement): ?>
                             <tr>
                                 <td><?php echo date('Y-m-d H:i:s', strtotime($movement['created_at'])); ?></td>
+                                <td>
+                                    <?php if ($movement['image_url']): ?>
+                                        <img src="<?php echo htmlspecialchars('../../../' . $movement['image_url']); ?>" 
+                                             alt="<?php echo htmlspecialchars($movement['product_name']); ?>"
+                                             class="product-thumbnail rounded"
+                                             style="max-width: 50px; height: auto; border: 1px solid #dee2e6;">
+                                    <?php else: ?>
+                                        <img src="../../../assets/images/no-image.svg" 
+                                             alt="No image"
+                                             class="product-thumbnail rounded"
+                                             style="max-width: 50px; height: auto; border: 1px solid #dee2e6;">
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($movement['product_name'] . ' (' . $movement['sku'] . ')'); ?></td>
-                                <td><?php echo ucfirst($movement['type']); ?></td>
+                                <td><?php 
+                                    $type_display = [
+                                        'in_initial' => 'Initial Stock',
+                                        'in_purchase' => 'Purchase',
+                                        'in_to_out' => 'IN to OUT',
+                                        'out_to_in' => 'OUT to IN',
+                                        'out_sale' => 'Sale',
+                                        'out_adjustment' => 'Adjustment'
+                                    ];
+                                    echo $type_display[$movement['type']] ?? ucfirst($movement['type']); 
+                                ?></td>
                                 <td class="<?php echo $movement['quantity'] > 0 ? 'movement-add' : 'movement-remove'; ?>">
                                     <?php echo ($movement['quantity'] > 0 ? '+' : '') . $movement['quantity']; ?>
                                 </td>
