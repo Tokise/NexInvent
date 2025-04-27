@@ -110,7 +110,8 @@ try {
         echo json_encode([
             'success' => true,
             'message' => 'Sale processed successfully',
-            'transaction_number' => $transaction_number
+            'transaction_number' => $transaction_number,
+            'sale_id' => $sale_id
         ]);
 
     } catch (Exception $e) {

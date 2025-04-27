@@ -1,5 +1,15 @@
 <?php
-session_start();
+require_once '../../includes/require_auth.php';
+
+// Add aggressive history protection to prevent back button to login page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Store session info in browser storage for history tracking
+$session_id = session_id();
+$user_id = $_SESSION['user_id'];
 require_once '../../config/db.php';
 require_once '../../includes/permissions.php';
 
@@ -74,7 +84,6 @@ $sales = fetchAll($sql, []);
 </head>
 <body>
 
-<?php include '../../includes/sidebar.php'; ?>
 <?php include '../../includes/header.php'; ?>
 
 <div class="main-content">

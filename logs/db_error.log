@@ -1,0 +1,333 @@
+[26-Apr-2025 19:06:18 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[26-Apr-2025 19:06:18 Europe/Berlin] Permission check error: Database connection failed. Please check your configuration.
+[27-Apr-2025 09:38:18 Europe/Berlin] Connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[27-Apr-2025 09:38:18 Europe/Berlin] Login error: Database connection failed. Please check your configuration.
+[27-Apr-2025 13:51:23 Europe/Berlin] Login failed for user admin - Password verification failed
+[27-Apr-2025 13:51:23 Europe/Berlin] Provided password hash: $2y$10$oM6624ZV6dHDOIrC3OmpBucly7iEKv.EoQ991BIU/EnWU8ugvZq9q
+[27-Apr-2025 13:51:23 Europe/Berlin] Stored password hash: $2y$10$d9DRnwE7DJYK1wGM0EgUM.4vTfHSgfcVicgtKjQHh5Hqf8qIYJ1p2
+[27-Apr-2025 13:52:18 Europe/Berlin] Database error in fetchValue: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'nexinvent.customers' doesn't exist
+SQL: SELECT COUNT(*) FROM customers
+Params: Array
+(
+)
+
+[27-Apr-2025 13:52:18 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching value in C:\xampp\htdocs\NexInvent\src\config\db.php:77
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\dashboard\index.php(15): fetchValue('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 77
+[27-Apr-2025 13:56:42 Europe/Berlin] Database error in fetchValue: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'nexinvent.customers' doesn't exist
+SQL: SELECT COUNT(*) FROM customers
+Params: Array
+(
+)
+
+[27-Apr-2025 13:56:42 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching value in C:\xampp\htdocs\NexInvent\src\config\db.php:77
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\dashboard\index.php(15): fetchValue('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 77
+[27-Apr-2025 14:00:36 Europe/Berlin] Database error in fetchValue: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'nexinvent.customers' doesn't exist
+SQL: SELECT COUNT(*) FROM customers
+Params: Array
+(
+)
+
+[27-Apr-2025 14:00:36 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching value in C:\xampp\htdocs\NexInvent\src\config\db.php:77
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\dashboard\index.php(15): fetchValue('SELECT COUNT(*)...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 77
+[27-Apr-2025 14:45:12 Europe/Berlin] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\NexInvent\src\modules\employees\index.php on line 133
+[27-Apr-2025 14:56:13 Europe/Berlin] Received product save request: {"name":"Samsung","sku":"1535434","category_id":"1","description":"awdawd","unit_price":"10","initial_stock":"100","reorder_level":"10","in_threshold_amount":"15","out_threshold_amount":"15"}
+[27-Apr-2025 14:56:13 Europe/Berlin] Files received: {"image":{"name":"zenitsu-agatsuma-5k-3840x2160-16938.jpg","full_path":"zenitsu-agatsuma-5k-3840x2160-16938.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\phpB3B7.tmp","error":0,"size":2129368}}
+[27-Apr-2025 14:56:13 Europe/Berlin] Validated data: {"name":"Samsung","sku":"1535434","category_id":"1","description":"awdawd","unit_price":"10","initial_stock":"100","reorder_level":"10","in_threshold_amount":"15","out_threshold_amount":"15"}
+[27-Apr-2025 14:56:13 Europe/Berlin] Processing image upload
+[27-Apr-2025 14:56:13 Europe/Berlin] Saving image to: ../../../uploads/products/680e296d3a25b.jpg
+[27-Apr-2025 14:56:13 Europe/Berlin] Image saved successfully
+[27-Apr-2025 14:56:13 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 14:56:37 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function fetchOne() in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php:32
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php on line 32
+[27-Apr-2025 15:01:03 Europe/Berlin] Received product save request: {"name":"Iphone","sku":"164843","category_id":"1","description":"dawdawda","unit_price":"30","initial_stock":"100","reorder_level":"10","in_threshold_amount":"15","out_threshold_amount":"15"}
+[27-Apr-2025 15:01:03 Europe/Berlin] Files received: {"image":{"name":"illustration-anime-city.jpg","full_path":"illustration-anime-city.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php203A.tmp","error":0,"size":10987620}}
+[27-Apr-2025 15:01:03 Europe/Berlin] Validated data: {"name":"Iphone","sku":"164843","category_id":"1","description":"dawdawda","unit_price":"30","initial_stock":"100","reorder_level":"10","in_threshold_amount":"15","out_threshold_amount":"15"}
+[27-Apr-2025 15:01:03 Europe/Berlin] Processing image upload
+[27-Apr-2025 15:01:03 Europe/Berlin] Saving image to: ../../../uploads/products/680e2a8f2f006.jpg
+[27-Apr-2025 15:01:03 Europe/Berlin] Image saved successfully
+[27-Apr-2025 15:01:03 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 15:04:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function fetchOne() in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php:32
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php on line 32
+[27-Apr-2025 15:04:05 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function fetchOne() in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php:32
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\products\ajax\get_product.php on line 32
+[27-Apr-2025 13:37:57 UTC] Connection failed: could not find driver
+[27-Apr-2025 15:47:23 Europe/Berlin] Received product save request: {"name":"awdawd","sku":"144","category_id":"1","description":"awdawd","unit_price":"10","initial_stock":"20","reorder_level":"5","in_threshold_amount":"10","out_threshold_amount":"10"}
+[27-Apr-2025 15:47:23 Europe/Berlin] Files received: {"image":{"name":"anime-style-mythical-dragon-creature.jpg","full_path":"anime-style-mythical-dragon-creature.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php8E4A.tmp","error":0,"size":10972716}}
+[27-Apr-2025 15:47:23 Europe/Berlin] Validated data: {"name":"awdawd","sku":"144","category_id":"1","description":"awdawd","unit_price":"10","initial_stock":"20","reorder_level":"5","in_threshold_amount":"10","out_threshold_amount":"10"}
+[27-Apr-2025 15:47:23 Europe/Berlin] Processing image upload
+[27-Apr-2025 15:47:23 Europe/Berlin] Saving image to: ../../../uploads/products/680e356bd3d8a.jpg
+[27-Apr-2025 15:47:23 Europe/Berlin] Image saved successfully
+[27-Apr-2025 15:47:23 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 16:00:12 Europe/Berlin] Received product save request: {"name":"Smartphones","sku":"1561679","category_id":"1","description":"awdwad","unit_price":"10","initial_stock":"20","reorder_level":"5","in_threshold_amount":"10","out_threshold_amount":"10"}
+[27-Apr-2025 16:00:12 Europe/Berlin] Files received: {"image":{"name":"yukino-yukinoshita-3840x2160-21987.png","full_path":"yukino-yukinoshita-3840x2160-21987.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\php48CC.tmp","error":0,"size":723419}}
+[27-Apr-2025 16:01:27 Europe/Berlin] Received product save request: {"name":"Samsung 123","sku":"984794","category_id":"1","description":"awd","unit_price":"10","initial_stock":"100","reorder_level":"10","in_threshold_amount":"15","out_threshold_amount":"15"}
+[27-Apr-2025 16:01:27 Europe/Berlin] Files received: {"image":{"name":"cityscape-anime-inspired-urban-area.jpg","full_path":"cityscape-anime-inspired-urban-area.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php6C0F.tmp","error":0,"size":8788858}}
+[27-Apr-2025 16:03:51 Europe/Berlin] Received product save request: {"name":"Iphone 15","sku":"6798165","category_id":"1","description":"awdaw","unit_price":"100","initial_stock":"100","reorder_level":"20","in_threshold_amount":"23","out_threshold_amount":"23"}
+[27-Apr-2025 16:03:51 Europe/Berlin] Files received: {"image":{"name":"480763990_1877517306329247_5471807080757369080_n.jpg","full_path":"480763990_1877517306329247_5471807080757369080_n.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\phpA21B.tmp","error":0,"size":229065}}
+[27-Apr-2025 16:04:36 Europe/Berlin] Received product save request: {"name":"Smartphones","sku":"14448949","category_id":"1","description":"awdwa","unit_price":"100","initial_stock":"100","reorder_level":"20","in_threshold_amount":"25","out_threshold_amount":"25"}
+[27-Apr-2025 16:04:36 Europe/Berlin] Files received: {"image":{"name":"Screenshot 2025-04-20 002314.png","full_path":"Screenshot 2025-04-20 002314.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\php4F44.tmp","error":0,"size":70475}}
+[27-Apr-2025 16:05:30 Europe/Berlin] Received product save request: {"name":"awdawd","sku":"984794aw564","category_id":"1","description":"awdaw","unit_price":"100","initial_stock":"100","reorder_level":"20","in_threshold_amount":"25","out_threshold_amount":"25"}
+[27-Apr-2025 16:05:30 Europe/Berlin] Files received: {"image":{"name":"Screenshot 2025-04-24 213130.png","full_path":"Screenshot 2025-04-24 213130.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\php2189.tmp","error":0,"size":73294}}
+[27-Apr-2025 16:05:30 Europe/Berlin] Validated data: {"name":"awdawd","sku":"984794aw564","category_id":"1","description":"awdaw","unit_price":"100","initial_stock":"100","reorder_level":"20","in_threshold_amount":"25","out_threshold_amount":"25"}
+[27-Apr-2025 16:05:30 Europe/Berlin] Processing image upload
+[27-Apr-2025 16:05:30 Europe/Berlin] Saving image to: ../../../uploads/products/680e39aa1603f.png
+[27-Apr-2025 16:05:30 Europe/Berlin] Image saved successfully
+[27-Apr-2025 16:05:30 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 15:23:18 UTC] Connection failed: could not find driver
+[27-Apr-2025 15:23:18 UTC] PHP Fatal error:  Uncaught Exception: Database connection failed. Please check your configuration. in C:\xampp\htdocs\NexInvent\src\config\db.php:34
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\config\db.php(57): getDBConnection()
+#1 Command line code(1): fetchRow('DESCRIBE produc...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 34
+[27-Apr-2025 18:12:20 Europe/Berlin] PHP Fatal error:  Cannot redeclare formatAmount() (previously declared in C:\xampp\htdocs\NexInvent\src\includes\settings.php:100) in C:\xampp\htdocs\NexInvent\src\includes\helpers.php on line 30
+[27-Apr-2025 18:14:53 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function requirePermission() in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php on line 22
+[27-Apr-2025 18:15:01 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function requirePermission() in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php on line 22
+[27-Apr-2025 18:21:15 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function requirePermission() in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php:22
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\users\system_settings.php on line 22
+[27-Apr-2025 18:23:26 Europe/Berlin] Received product save request: {"name":"Samsung","sku":"1535434","category_id":"1","description":"wada","unit_price":"100","initial_stock":"100","reorder_level":"10","out_threshold_amount":"15"}
+[27-Apr-2025 18:23:26 Europe/Berlin] Files received: {"image":{"name":"illustration-anime-character-rain.jpg","full_path":"illustration-anime-character-rain.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php6A31.tmp","error":0,"size":7590795}}
+[27-Apr-2025 18:23:26 Europe/Berlin] Validated data: {"name":"Samsung","sku":"1535434","category_id":"1","description":"wada","unit_price":"100","initial_stock":"100","reorder_level":"10","out_threshold_amount":"15"}
+[27-Apr-2025 18:23:26 Europe/Berlin] Processing image upload
+[27-Apr-2025 18:23:26 Europe/Berlin] Saving image to: ../../../uploads/products/680e59fe39eb1.jpg
+[27-Apr-2025 18:23:26 Europe/Berlin] Image saved successfully
+[27-Apr-2025 18:23:26 Europe/Berlin] Transaction rolled back: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+[27-Apr-2025 18:23:26 Europe/Berlin] Deleted uploaded image due to error
+[27-Apr-2025 18:23:26 Europe/Berlin] Error saving product: SQLSTATE[21S01]: Insert value list does not match column list: 1136 Column count doesn't match value count at row 1
+[27-Apr-2025 18:23:26 Europe/Berlin] Stack trace: #0 C:\xampp\htdocs\NexInvent\src\modules\products\ajax\save_product.php(113): PDO->prepare('INSERT INTO pro...')
+#1 {main}
+[27-Apr-2025 18:25:27 Europe/Berlin] Received product save request: {"name":"Samsung","sku":"1535434","category_id":"1","description":"wada","unit_price":"100","initial_stock":"100","reorder_level":"10","out_threshold_amount":"15"}
+[27-Apr-2025 18:25:27 Europe/Berlin] Files received: {"image":{"name":"illustration-anime-character-rain.jpg","full_path":"illustration-anime-character-rain.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php4367.tmp","error":0,"size":7590795}}
+[27-Apr-2025 18:25:27 Europe/Berlin] Validated data: {"name":"Samsung","sku":"1535434","category_id":"1","description":"wada","unit_price":"100","initial_stock":"100","reorder_level":"10","out_threshold_amount":"15"}
+[27-Apr-2025 18:25:27 Europe/Berlin] Processing image upload
+[27-Apr-2025 18:25:27 Europe/Berlin] Saving image to: ../../../uploads/products/680e5a7762530.jpg
+[27-Apr-2025 18:25:27 Europe/Berlin] Image saved successfully
+[27-Apr-2025 18:25:27 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 18:25:56 Europe/Berlin] Database error in fetchAll: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.in_threshold_amount' in 'field list'
+SQL: SELECT DISTINCT p.product_id, p.name, p.sku, c.name as category_name, 
+        p.in_stock_quantity as current_stock,
+        p.in_threshold_amount as threshold,
+        p.unit_price,
+        GREATEST(p.in_threshold_amount * 2 - p.in_stock_quantity, 10) as suggested_order
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.category_id 
+        WHERE p.in_stock_quantity <= p.in_threshold_amount 
+        AND p.product_id NOT IN (
+            SELECT DISTINCT poi.product_id 
+            FROM purchase_order_items poi
+            JOIN purchase_orders po ON poi.po_id = po.po_id
+            WHERE po.status IN ('pending', 'approved')
+        )
+        ORDER BY p.in_stock_quantity ASC
+Params: Array
+(
+)
+
+[27-Apr-2025 18:25:56 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching records in C:\xampp\htdocs\NexInvent\src\config\db.php:50
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\purchases\index.php(41): fetchAll('SELECT DISTINCT...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 50
+[27-Apr-2025 18:26:11 Europe/Berlin] Database error in fetchAll: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'p.in_threshold_amount' in 'field list'
+SQL: SELECT DISTINCT p.product_id, p.name, p.sku, c.name as category_name, 
+        p.in_stock_quantity as current_stock,
+        p.in_threshold_amount as threshold,
+        p.unit_price,
+        GREATEST(p.in_threshold_amount * 2 - p.in_stock_quantity, 10) as suggested_order
+        FROM products p 
+        LEFT JOIN categories c ON p.category_id = c.category_id 
+        WHERE p.in_stock_quantity <= p.in_threshold_amount 
+        AND p.product_id NOT IN (
+            SELECT DISTINCT poi.product_id 
+            FROM purchase_order_items poi
+            JOIN purchase_orders po ON poi.po_id = po.po_id
+            WHERE po.status IN ('pending', 'approved')
+        )
+        ORDER BY p.in_stock_quantity ASC
+Params: Array
+(
+)
+
+[27-Apr-2025 18:26:11 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching records in C:\xampp\htdocs\NexInvent\src\config\db.php:50
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\purchases\index.php(41): fetchAll('SELECT DISTINCT...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 50
+[27-Apr-2025 16:29:54 UTC] Connection failed: could not find driver
+[27-Apr-2025 18:34:28 Europe/Berlin] Received product save request: {"name":"Iphone","sku":"164843","category_id":"1","description":"awdaw","unit_price":"20","initial_stock":"100","reorder_level":"20","out_threshold_amount":"15"}
+[27-Apr-2025 18:34:28 Europe/Berlin] Files received: {"image":{"name":"zenitsu-agatsuma-5k-3840x2160-16938.jpg","full_path":"zenitsu-agatsuma-5k-3840x2160-16938.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php855C.tmp","error":0,"size":2129368}}
+[27-Apr-2025 18:34:28 Europe/Berlin] Validated data: {"name":"Iphone","sku":"164843","category_id":"1","description":"awdaw","unit_price":"20","initial_stock":"100","reorder_level":"20","out_threshold_amount":"15"}
+[27-Apr-2025 18:34:28 Europe/Berlin] Processing image upload
+[27-Apr-2025 18:34:28 Europe/Berlin] Saving image to: ../../../uploads/products/680e5c947ffb3.jpg
+[27-Apr-2025 18:34:28 Europe/Berlin] Image saved successfully
+[27-Apr-2025 18:34:28 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 18:40:46 Europe/Berlin] Received product save request: {"name":"Smartphones","sku":"1561679","category_id":"1","description":"awdaw","unit_price":"10","initial_stock":"20","reorder_level":"10","out_threshold_amount":"10"}
+[27-Apr-2025 18:40:46 Europe/Berlin] Files received: {"image":{"name":"illustration-anime-character-rain.jpg","full_path":"illustration-anime-character-rain.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php4A99.tmp","error":0,"size":7590795}}
+[27-Apr-2025 18:40:46 Europe/Berlin] Validated data: {"name":"Smartphones","sku":"1561679","category_id":"1","description":"awdaw","unit_price":"10","initial_stock":"20","reorder_level":"10","out_threshold_amount":"10"}
+[27-Apr-2025 18:40:46 Europe/Berlin] Processing image upload
+[27-Apr-2025 18:40:46 Europe/Berlin] Saving image to: ../../../uploads/products/680e5e0eb2ac3.jpg
+[27-Apr-2025 18:40:46 Europe/Berlin] Image saved successfully
+[27-Apr-2025 18:40:46 Europe/Berlin] Transaction committed successfully
+[27-Apr-2025 19:46:22 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:46:27 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\categories\index.php(61): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:46:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\products\index.php(79): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:46:28 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\pos\index.php(161): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:46:29 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\sales\index.php(88): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:46:30 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\purchases\index.php(111): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:48:15 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'where clause' in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:12
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php(12): PDO->prepare('SELECT * FROM n...')
+#1 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include('C:\\xampp\\htdocs...')
+#2 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#3 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 12
+[27-Apr-2025 19:53:15 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 19:53:21 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 19:55:23 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 19:55:42 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 19:56:25 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:01:50 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:02:13 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\users\settings.php(158): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:02:58 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:07:10 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(57): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:08:35 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:08:45 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:08:46 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\categories\index.php(61): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:08:47 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\stock\index.php(70): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 20:08:49 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined function timeAgo() in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php:71
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\includes\header.php(62): include()
+#1 C:\xampp\htdocs\NexInvent\src\modules\categories\index.php(61): include('C:\\xampp\\htdocs...')
+#2 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\includes\notification_dropdown.php on line 71
+[27-Apr-2025 21:07:12 Europe/Berlin] Received product save request: {"name":"Rei","sku":"929145","category_id":"3","description":"dawdaw","unit_price":"20","initial_stock":"50","reorder_level":"20","out_threshold_amount":"15"}
+[27-Apr-2025 21:07:12 Europe/Berlin] Files received: {"image":{"name":"Screenshot 2025-04-20 152609.png","full_path":"Screenshot 2025-04-20 152609.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\php5944.tmp","error":0,"size":414555}}
+[27-Apr-2025 21:07:12 Europe/Berlin] Validated data: {"name":"Rei","sku":"929145","category_id":"3","description":"dawdaw","unit_price":"20","initial_stock":"50","reorder_level":"20","out_threshold_amount":"15"}
+[27-Apr-2025 21:07:12 Europe/Berlin] Processing image upload
+[27-Apr-2025 21:07:12 Europe/Berlin] Saving image to: ../../../uploads/products/680e8060836ff.png
+[27-Apr-2025 21:07:12 Europe/Berlin] Image saved successfully
+[27-Apr-2025 21:07:12 Europe/Berlin] Transaction committed successfully

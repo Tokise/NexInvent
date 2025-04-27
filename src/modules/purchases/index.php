@@ -1,5 +1,15 @@
 <?php
-session_start();
+require_once '../../includes/require_auth.php';
+
+// Add aggressive history protection to prevent back button to login page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Store session info in browser storage for history tracking
+$session_id = session_id();
+$user_id = $_SESSION['user_id'];
 require_once '../../config/db.php';
 require_once '../../includes/permissions.php';
 
@@ -13,14 +23,24 @@ if (!isset($_SESSION['user_id'])) {
 requirePermission('manage_purchases');
 
 // Fetch low stock products
-$sql = "SELECT DISTINCT p.product_id, p.name, p.sku, c.name as category_name, 
-        p.in_stock_quantity as current_stock,
-        p.in_threshold_amount as threshold,
-        p.unit_price,
-        GREATEST(p.in_threshold_amount * 2 - p.in_stock_quantity, 10) as suggested_order
+$sql = "SELECT p.*, c.name as category_name, 
+        p.in_stock_quantity as current_stock, 
+        p.reorder_level as threshold, 
+        GREATEST(p.reorder_level * 2 - p.in_stock_quantity, 10) as suggested_order
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id 
-        WHERE p.in_stock_quantity <= p.in_threshold_amount 
+        WHERE p.in_stock_quantity <= p.reorder_level 
+        AND p.product_id NOT IN (
+            SELECT DISTINCT poi.product_id 
+            FROM purchase_order_items poi
+            JOIN purchase_orders po ON poi.po_id = po.po_id
+            WHERE po.status IN ('pending', 'approved')
+        )
+        AND p.product_id NOT IN (
+            SELECT DISTINCT product_id
+            FROM pending_stock_additions
+            WHERE status = 'pending'
+        )
         ORDER BY p.in_stock_quantity ASC";
 $low_stock_products = fetchAll($sql);
 
@@ -87,7 +107,7 @@ $completed_orders = fetchAll($sql);
 </head>
 <body>
 
-<?php include '../../includes/sidebar.php'; ?>
+
 <?php include '../../includes/header.php'; ?>
 
 <div class="main-content">
@@ -139,8 +159,12 @@ $completed_orders = fetchAll($sql);
                 <div class="card">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Low Stock Products</h5>
-                        <?php if (!empty($low_stock_products)): ?>
+                        <?php if (!empty($low_stock_products) && ($_SESSION['role'] === 'admin' || $_SESSION['role'] === 'manager')): ?>
                         <button type="button" class="btn btn-light" id="generatePOBtn">
+                            <i class="bi bi-file-earmark-plus"></i> Generate Purchase Order
+                        </button>
+                        <?php elseif (!empty($low_stock_products)): ?>
+                        <button type="button" class="btn btn-light" disabled title="Only administrators and managers can generate purchase orders">
                             <i class="bi bi-file-earmark-plus"></i> Generate Purchase Order
                         </button>
                         <?php endif; ?>
@@ -157,7 +181,6 @@ $completed_orders = fetchAll($sql);
                                         <th>Category</th>
                                         <th>SKU</th>
                                         <th>Current Stock</th>
-                                        <th>Threshold</th>
                                         <th>Suggested Order</th>
                                     </tr>
                                 </thead>
@@ -179,7 +202,7 @@ $completed_orders = fetchAll($sql);
                                                     <?php echo $product['current_stock']; ?>
                                                 </span>
                                             </td>
-                                            <td><?php echo $product['threshold']; ?></td>
+                                     
                                             <td><?php echo $product['suggested_order']; ?></td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -223,14 +246,14 @@ $completed_orders = fetchAll($sql);
                                             </td>
                                             <td>
                                                 <button class="btn btn-sm btn-info" onclick="viewPurchaseOrder('<?php echo $po['po_id']; ?>')">
-                                                    <i class="bi bi-eye"></i> View
+                                                    <i class="bi bi-eye"></i> 
                                                 </button>
                                                 <?php if ($po['status'] === 'approved' || $po['status'] === 'ordered'): ?>
                                                 <button class="btn btn-sm btn-primary" onclick="viewReceipt('<?php echo $po['po_id']; ?>')">
-                                                    <i class="bi bi-receipt"></i> View Receipt
+                                                    <i class="bi bi-receipt"></i>
                                                 </button>
                                                 <button class="btn btn-sm btn-success" onclick="markAsReceived('<?php echo $po['po_id']; ?>')">
-                                                    <i class="bi bi-check-lg"></i> Mark Received
+                                                    <i class="bi bi-check-lg"></i> 
                                                 </button>
                                                 <?php endif; ?>
                                             </td>
@@ -336,50 +359,6 @@ $completed_orders = fetchAll($sql);
     </div>
 </div>
 
-<!-- Mark Products Modal -->
-<div class="modal fade" id="markProductsModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Mark Received Products</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="markProductsForm">
-                    <input type="hidden" id="mark_po_id">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-end mb-2">
-                            <button type="button" class="btn btn-secondary" id="markAllBtn">
-                                <i class="bi bi-check-all"></i> Mark All as Received
-                            </button>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table" id="markProductsTable">
-                                <thead>
-                                    <tr>
-                                        <th>Product</th>
-                                        <th>Ordered Quantity</th>
-                                        <th>Received Quantity</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" id="receiveNotes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="completeReceiveBtn">Complete Receiving</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -600,6 +579,17 @@ function getSelectedProducts() {
 }
 
 function generatePurchaseOrder(products) {
+    // Check if user has permission to generate PO
+    <?php if ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'manager'): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Permission Denied',
+        text: 'Only administrators and managers can generate purchase orders.',
+        confirmButtonColor: '#dc3545'
+    });
+    return;
+    <?php endif; ?>
+
     // Show loading state
     Swal.fire({
         title: 'Generating Purchase Order',
@@ -623,10 +613,15 @@ function generatePurchaseOrder(products) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            // Get product names for notification
+            const productNames = products.map(p => p.product_name).join(', ');
+            
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: `Purchase order ${data.data.po_number} has been generated successfully.`,
+                html: `<p>Purchase order ${data.data.po_number} has been generated successfully.</p>
+                      <p><strong>Products added to order:</strong> ${productNames}</p>
+                      <p>These items will no longer appear in the Low Stock section.</p>`,
                 showConfirmButton: true
             }).then(() => {
                 // Refresh the page to show the new PO

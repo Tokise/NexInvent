@@ -25,7 +25,7 @@ try {
     requirePermission('manage_products');
 
     // Validate required fields
-    $required_fields = ['sku', 'name', 'category_id', 'unit_price', 'initial_stock', 'reorder_level', 'in_threshold_amount', 'out_threshold_amount'];
+    $required_fields = ['sku', 'name', 'category_id', 'unit_price', 'initial_stock', 'reorder_level', 'out_threshold_amount'];
     foreach ($required_fields as $field) {
         if (!isset($_POST[$field]) || $_POST[$field] === '') {
             error_log("Missing required field: $field");
@@ -47,10 +47,6 @@ try {
 
     if (!is_numeric($_POST['reorder_level']) || $_POST['reorder_level'] < 0) {
         throw new Exception('Reorder level must be a positive number');
-    }
-
-    if (!is_numeric($_POST['in_threshold_amount']) || $_POST['in_threshold_amount'] < 0) {
-        throw new Exception('IN stock threshold must be a positive number');
     }
 
     if (!is_numeric($_POST['out_threshold_amount']) || $_POST['out_threshold_amount'] < 0) {
@@ -111,8 +107,8 @@ try {
 
         // Insert product
         $sql = "INSERT INTO products (sku, name, description, category_id, unit_price, in_stock_quantity, 
-                out_stock_quantity, reorder_level, out_threshold_amount, in_threshold_amount, image_url) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                out_stock_quantity, reorder_level, out_threshold_amount, image_url) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
@@ -125,7 +121,6 @@ try {
             0,
             $_POST['reorder_level'],
             $_POST['out_threshold_amount'],
-            $_POST['in_threshold_amount'],
             $imageUrl
         ]);
 

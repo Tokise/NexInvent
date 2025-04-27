@@ -6,6 +6,8 @@ $totalProducts = 0;
 $totalSales = 0;
 $lowStock = 0;
 $monthlyRevenue = 0;
+$stockValue = 0;
+
 
 // Get database connection
 $conn = getDBConnection();
@@ -38,7 +40,19 @@ if (hasPermission('view_inventory')) {
     $lowStock = fetchValue($sql);
 }
 
-// Get recent activities (last 10)
+// Get stock value
+if (hasPermission('view_inventory')) {
+    $sql = "SELECT COALESCE(SUM(in_stock_quantity * unit_price), 0) FROM products";
+    $stockValue = fetchValue($sql);
+}
+
+// Get pending purchase orders
+if (hasPermission('view_purchases')) {
+    $sql = "SELECT COUNT(*) FROM purchase_orders WHERE status = 'pending'";
+    $pendingOrders = fetchValue($sql);
+}
+
+// Get recent activities (last 7)
 $recentActivities = [];
 
 // Recent product additions
@@ -143,6 +157,28 @@ if (hasPermission('view_products')) {
     }
 }
 
+// Get top selling products data
+$topSellingProducts = [];
+$topSellingLabels = [];
+$topSellingData = [];
+
+if (hasPermission('view_sales')) {
+    $sql = "SELECT p.name, SUM(si.quantity) as total_sold
+            FROM sale_items si
+            JOIN products p ON si.product_id = p.product_id
+            JOIN sales s ON si.sale_id = s.sale_id
+            WHERE s.payment_status = 'completed'
+            GROUP BY si.product_id
+            ORDER BY total_sold DESC
+            LIMIT 5";
+    $topSellingProducts = fetchAll($sql);
+    
+    foreach ($topSellingProducts as $product) {
+        $topSellingLabels[] = $product['name'];
+        $topSellingData[] = $product['total_sold'];
+    }
+}
+
 // Get recently added products
 $recentlyAddedProducts = [];
 if (hasPermission('view_products')) {
@@ -156,6 +192,7 @@ if (hasPermission('view_products')) {
 ?>
 
 <link href="/NexInvent/src/css/global.css" rel="stylesheet">
+
 <div class="main-content">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -166,112 +203,180 @@ if (hasPermission('view_products')) {
             </div>
         </div>
 
-        <!-- Statistics Cards -->
+        <!-- Statistics Cards - Consistent Card Design -->
         <div class="row g-4 mb-4">
             <?php if (hasPermission('view_products')): ?>
-            <div class="col-md-3">
-                <div class="card card-dashboard bg-primary text-white">
+            <div class="col-md-3 col-sm-6">
+                <div class="card bg-primary text-white">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title">Total Products</h6>
-                                <h3 class="mb-0"><?php echo number_format($totalProducts); ?></h3>
-                            </div>
-                            <div class="stat-icon">
-                                <i class="bi bi-box-seam"></i>
-                            </div>
-                        </div>
+                        <h5 class="card-title">Total Products</h5>
+                        <h3 class="mb-0"><?php echo number_format($totalProducts); ?></h3>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
             
             <?php if (hasPermission('view_sales')): ?>
-            <div class="col-md-3">
-                <div class="card card-dashboard bg-success text-white">
+            <div class="col-md-3 col-sm-6">
+                <div class="card bg-success text-white">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title">Monthly Revenue</h6>
-                                <h3 class="mb-0">$<?php echo number_format($monthlyRevenue, 2); ?></h3>
-                            </div>
-                            <div class="stat-icon">
-                                <i class="bi bi-currency-dollar"></i>
-                            </div>
-                        </div>
+                        <h5 class="card-title">Monthly Revenue</h5>
+                        <h3 class="mb-0">$<?php echo number_format($monthlyRevenue, 2); ?></h3>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-3">
-                <div class="card card-dashboard bg-warning text-white">
+            <div class="col-md-3 col-sm-6">
+                <div class="card bg-info text-white">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title">Total Sales</h6>
-                                <h3 class="mb-0"><?php echo number_format($totalSales); ?></h3>
-                            </div>
-                            <div class="stat-icon">
-                                <i class="bi bi-graph-up"></i>
-                            </div>
-                        </div>
+                        <h5 class="card-title">Total Sales</h5>
+                        <h3 class="mb-0"><?php echo number_format($totalSales); ?></h3>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
             
             <?php if (hasPermission('view_inventory')): ?>
-            <div class="col-md-3">
-                <div class="card card-dashboard bg-danger text-white">
+            <div class="col-md-3 col-sm-6">
+                <div class="card bg-danger text-white">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="card-title">Low Stock Items</h6>
-                                <h3 class="mb-0"><?php echo number_format($lowStock); ?></h3>
-                            </div>
-                            <div class="stat-icon">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </div>
-                        </div>
+                        <h5 class="card-title">Low Stock Items</h5>
+                        <h3 class="mb-0"><?php echo number_format($lowStock); ?></h3>
                     </div>
                 </div>
             </div>
             <?php endif; ?>
         </div>
 
-        <!-- Charts and Recent Activities -->
-        <div class="row g-4">
+        <!-- Charts and Notifications Row -->
+        <div class="row g-4 mb-4">
             <?php if (hasPermission('view_sales')): ?>
-            <div class="col-md-8">
-                <div class="card card-dashboard mb-4">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0">Sales Overview (Last 6 Months)</h5>
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title m-0">Sales Overview</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="salesChart" height="300"></canvas>
                     </div>
                 </div>
-                
-                <?php if (hasPermission('view_products')): ?>
-                <div class="card card-dashboard">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0">Product Categories</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="categoriesChart" height="250"></canvas>
+            </div>
+            <?php endif; ?>
+
+            <!-- Notifications Card -->
+            <div class="col-lg-5">
+                <div class="card card-dashboard border-0 shadow-sm h-100">
+                    <div class="card-body p-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="stat-icon rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 35px; height: 35px; min-width: 35px;">
+                                    <i class="bi bi-bell" style="font-size: 0.9rem;"></i>
+                                </div>
+                                <h6 class="card-title mb-0" style="font-size: 0.9rem;">Recent Notifications</h6>
+                            </div>
+                            <a href="/NexInvent/src/modules/notifications/index.php" class="text-decoration-none small">View all</a>
+                        </div>
+                        
+                        <?php
+                        // Get notifications
+                        $conn = getDBConnection();
+                        $userRole = $_SESSION['role'] ?? '';
+                        $query = "SELECT * FROM notifications WHERE (for_role = ? OR for_role = 'admin') ORDER BY created_at DESC LIMIT 3";
+                        $stmt = $conn->prepare($query);
+                        $stmt->execute([$userRole]);
+                        $dashboardNotifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        
+                        if (empty($dashboardNotifications)): 
+                        ?>
+                        <div class="text-center py-2">
+                            <i class="bi bi-bell-slash text-muted opacity-50" style="font-size: 1.2rem;"></i>
+                            <p class="mt-1 text-muted small" style="font-size: 0.7rem;">No notifications found</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="notifications-list">
+                            <?php foreach ($dashboardNotifications as $notification): ?>
+                            <div class="notification-item d-flex p-3 border-bottom">
+                                <?php
+                                // Determine icon and color based on notification type
+                                $iconClass = 'bi-info-circle';
+                                $colorClass = 'primary';
+                                
+                                if (strpos($notification['message'], 'stock') !== false) {
+                                    $iconClass = 'bi-box';
+                                    $colorClass = 'warning';
+                                } elseif (strpos($notification['message'], 'order') !== false) {
+                                    $iconClass = 'bi-cart';
+                                    $colorClass = 'info';
+                                } elseif (strpos($notification['message'], 'sale') !== false) {
+                                    $iconClass = 'bi-cash';
+                                    $colorClass = 'success';
+                                } elseif (strpos($notification['message'], 'error') !== false || strpos($notification['message'], 'failed') !== false) {
+                                    $iconClass = 'bi-exclamation-circle';
+                                    $colorClass = 'danger';
+                                }
+                                ?>
+                                <div class="me-2">
+                                    <div class="notification-icon rounded-circle bg-light-<?php echo $colorClass; ?> text-<?php echo $colorClass; ?> d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.75rem;">
+                                        <i class="bi <?php echo $iconClass; ?>"></i>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-semibold small text-truncate" style="font-size: 0.8rem;"><?php echo htmlspecialchars($notification['title']); ?></h6>
+                                        <small class="text-muted ms-1" style="font-size: 0.7rem; white-space: nowrap;"><?php echo timeAgo($notification['created_at']); ?></small>
+                                    </div>
+                                    <p class="mb-0 small text-truncate" style="font-size: 0.75rem;"><?php echo htmlspecialchars($notification['message']); ?></p>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Charts and Recent Activities Row -->
+        <div class="row g-4">
+            <?php if (hasPermission('view_sales')): ?>
+            <div class="col-lg-7">
+                <div class="row g-4">
+                    <?php if (hasPermission('view_products')): ?>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent border-0">
+                                <h5 class="card-title m-0">Product Categories</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="categoriesChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($topSellingData)): ?>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent border-0">
+                                <h5 class="card-title m-0">Top Selling Products</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="topSellingChart" height="250"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
             <?php endif; ?>
             
-            <div class="col-md-4">
-                <div class="card card-dashboard mb-4">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Recent Activity</h5>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title m-0">Recent Activity</h5>
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="activityFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-person me-1"></i> <span id="currentFilter">All Users</span>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" id="activityFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-filter me-1"></i> <span id="currentFilter">All</span>
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="activityFilterDropdown">
                                 <li><a class="dropdown-item active" href="#" data-filter="all">All Users</a></li>
@@ -286,7 +391,7 @@ if (hasPermission('view_products')) {
                                 <p class="mt-2 text-muted">No recent activities found</p>
                             </div>
                         <?php else: ?>
-                            <div class="activity-timeline">
+                            <div class="activity-timeline p-3">
                                 <?php 
                                 // Make a copy of the activities array for filtering
                                 $filteredActivities = $recentActivities;
@@ -311,12 +416,12 @@ if (hasPermission('view_products')) {
                                         $dateLabel = date('F j, Y', strtotime($date));
                                     }
                                 ?>
-                                    <div class="activity-date px-3 py-2 bg-light">
-                                        <span class="text-muted"><?php echo $dateLabel; ?></span>
+                                    <div class="activity-date mb-2">
+                                        <span class="small text-muted"><?php echo $dateLabel; ?></span>
                                     </div>
                                     
                                     <?php foreach ($activities as $activity): ?>
-                                        <div class="activity-item px-3 py-2 border-bottom" 
+                                        <div class="activity-item mb-3" 
                                              data-user-id="<?php echo $activity['user_id']; ?>" 
                                              data-current-user="<?php echo $_SESSION['user_id']; ?>">
                                             <div class="d-flex">
@@ -325,26 +430,26 @@ if (hasPermission('view_products')) {
                                                 $iconClass = 'bi-box';
                                                 $colorClass = 'primary';
                                                 
-                                                if (strpos($activity['description'], 'product') !== false) {
+                                                if ($activity['type'] === 'product') {
                                                     $iconClass = 'bi-box';
                                                     $colorClass = 'primary';
-                                                } elseif (strpos($activity['description'], 'sale') !== false || strpos($activity['description'], 'order') !== false) {
+                                                } elseif ($activity['type'] === 'sale') {
                                                     $iconClass = 'bi-cart';
                                                     $colorClass = 'success';
-                                                } elseif (strpos($activity['description'], 'stock') !== false || strpos($activity['description'], 'inventory') !== false) {
+                                                } elseif ($activity['type'] === 'movement') {
                                                     $iconClass = 'bi-arrow-left-right';
                                                     $colorClass = 'warning';
-                                                } elseif (strpos($activity['description'], 'employee') !== false || strpos($activity['description'], 'user') !== false) {
+                                                } elseif ($activity['type'] === 'employee') {
                                                     $iconClass = 'bi-person';
                                                     $colorClass = 'info';
                                                 }
                                                 ?>
-                                                <div class="activity-icon bg-light-<?php echo $colorClass; ?> text-<?php echo $colorClass; ?> me-3">
-                                                    <i class="bi <?php echo $iconClass; ?>"></i>
+                                                <div class="activity-icon rounded-circle bg-light-<?php echo $colorClass; ?> text-<?php echo $colorClass; ?> d-flex align-items-center justify-content-center me-3">
+                                                    <i class="bi <?php echo $iconClass; ?> small"></i>
                                                 </div>
-                                                <div class="activity-content">
+                                                <div class="activity-content flex-grow-1">
                                                     <div class="d-flex justify-content-between">
-                                                        <p class="mb-0 text-dark"><?php echo htmlspecialchars($activity['description']); ?></p>
+                                                        <p class="mb-0 small"><?php echo htmlspecialchars($activity['description']); ?></p>
                                                         <small class="text-muted"><?php echo date('h:i A', strtotime($activity['created_at'])); ?></small>
                                                     </div>
                                                     <small class="text-muted">by <?php echo htmlspecialchars($activity['user_name'] ?? 'System'); ?></small>
@@ -353,34 +458,30 @@ if (hasPermission('view_products')) {
                                         </div>
                                     <?php endforeach; ?>
                                 <?php endforeach; ?>
-                                
-                                <div class="text-center py-2">
-                                    <a href="#" class="view-all text-decoration-none">View All Activities</a>
-                                </div>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
                 
                 <?php if (hasPermission('view_products') && !empty($recentlyAddedProducts)): ?>
-                <div class="card card-dashboard">
-                    <div class="card-header bg-white">
-                        <h5 class="card-title mb-0">Recently Added Products</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="card-title m-0">Recently Added Products</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
                             <?php foreach ($recentlyAddedProducts as $product): ?>
-                            <div class="list-group-item">
+                            <div class="list-group-item border-0 border-bottom py-3">
                                 <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1"><?php echo htmlspecialchars($product['name']); ?></h6>
-                                        <span class="badge bg-info"><?php echo htmlspecialchars($product['category_name']); ?></span>
-                                    </div>
-                                    <p class="mb-0">
-                                        <strong>SKU:</strong> <?php echo htmlspecialchars($product['sku']); ?> | 
-                                        <strong>Price:</strong> $<?php echo number_format($product['unit_price'], 2); ?> | 
-                                        <strong>Stock:</strong> <?php echo $product['in_stock_quantity']; ?>
-                                    </p>
+                                    <h6 class="mb-1 fw-semibold"><?php echo htmlspecialchars($product['name']); ?></h6>
+                                    <span class="badge bg-light text-dark"><?php echo htmlspecialchars($product['category_name']); ?></span>
                                 </div>
+                                <p class="mb-0 small">
+                                    <span class="badge bg-light-secondary text-secondary me-2">SKU: <?php echo htmlspecialchars($product['sku']); ?></span>
+                                    <span class="badge bg-light-success text-success me-2">$<?php echo number_format($product['unit_price'], 2); ?></span>
+                                    <span class="badge bg-light-info text-info">Stock: <?php echo $product['in_stock_quantity']; ?></span>
+                                </p>
+                            </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -391,6 +492,58 @@ if (hasPermission('view_products')) {
     </div>
 </div>
 
+<style>
+/* Minimal UI Styles */
+.card-stats {
+    transition: transform 0.2s;
+    border-radius: 10px;
+}
+.card-stats:hover {
+    transform: translateY(-5px);
+}
+.stat-icon {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+.bg-light-primary {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+.bg-light-success {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+.bg-light-info {
+    background-color: rgba(13, 202, 240, 0.1);
+}
+.bg-light-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+.bg-light-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+.bg-light-secondary {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+}
+.card {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.card-header {
+    padding: 1rem 1.5rem;
+}
+.list-group-item:last-child {
+    border-bottom: 0 !important;
+}
+</style>
+
 <?php
 // Helper function to format time ago
 function timeAgo($datetime) {
@@ -399,215 +552,118 @@ function timeAgo($datetime) {
     $diff = $now - $time;
     
     if ($diff < 60) {
-        return "Just now";
+        return 'just now';
     } elseif ($diff < 3600) {
         $mins = floor($diff / 60);
-        return $mins . " min" . ($mins > 1 ? "s" : "") . " ago";
+        return $mins . ' min' . ($mins > 1 ? 's' : '') . ' ago';
     } elseif ($diff < 86400) {
         $hours = floor($diff / 3600);
-        return $hours . " hour" . ($hours > 1 ? "s" : "") . " ago";
+        return $hours . ' hour' . ($hours > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 172800) {
+        return 'yesterday';
     } elseif ($diff < 604800) {
         $days = floor($diff / 86400);
-        return $days . " day" . ($days > 1 ? "s" : "") . " ago";
+        return $days . ' day' . ($days > 1 ? 's' : '') . ' ago';
+    } elseif ($diff < 2419200) {
+        $weeks = floor($diff / 604800);
+        return $weeks . ' week' . ($weeks > 1 ? 's' : '') . ' ago';
     } else {
-        return date("M j, Y", $time);
+        return date('M j, Y', $time);
     }
 }
 ?>
 
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Activity filter functionality
-    const filterLinks = document.querySelectorAll('.dropdown-menu .dropdown-item');
-    const currentFilterText = document.getElementById('currentFilter');
+    // Activity Filter
     const activityItems = document.querySelectorAll('.activity-item');
+    const filterDropdownItems = document.querySelectorAll('.dropdown-item[data-filter]');
+    const currentFilterText = document.getElementById('currentFilter');
     
-    filterLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
+    // Initialize date headers visibility check
+    function updateDateHeadersVisibility() {
+        const dateHeaders = document.querySelectorAll('.activity-date');
+        dateHeaders.forEach(header => {
+            const nextElement = header.nextElementSibling;
+            let hasVisibleActivity = false;
             
-            // Update active state
-            filterLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Update dropdown button text
-            currentFilterText.textContent = this.textContent;
-            
-            // Filter activities
-            const filterType = this.getAttribute('data-filter');
-            const currentUserId = '<?php echo $_SESSION['user_id']; ?>';
-            
-            activityItems.forEach(item => {
-                if (filterType === 'all') {
-                    item.style.display = '';
-                } else if (filterType === 'mine') {
-                    const itemUserId = item.getAttribute('data-user-id');
-                    item.style.display = (itemUserId === currentUserId) ? '' : 'none';
+            // Check if any following activity items (until next date header) are visible
+            let current = nextElement;
+            while (current && !current.classList.contains('activity-date')) {
+                if (current.classList.contains('activity-item') && 
+                    window.getComputedStyle(current).display !== 'none') {
+                    hasVisibleActivity = true;
+                    break;
                 }
-            });
+                current = current.nextElementSibling;
+            }
             
-            // Check if any activities are visible in each date group
-            document.querySelectorAll('.activity-date').forEach(dateHeader => {
-                let hasVisibleActivities = false;
-                let nextElement = dateHeader.nextElementSibling;
-                
-                // Check all activities until the next date header
-                while (nextElement && !nextElement.classList.contains('activity-date')) {
-                    if (nextElement.classList.contains('activity-item') && 
-                        nextElement.style.display !== 'none') {
-                        hasVisibleActivities = true;
-                        break;
-                    }
-                    nextElement = nextElement.nextElementSibling;
-                }
-                
-                // Hide date header if no visible activities
-                dateHeader.style.display = hasVisibleActivities ? '' : 'none';
-            });
-            
-            // Show "no activities" message if all are filtered out
-            const noActivitiesMessage = document.querySelector('.card-body .text-center');
-            const hasVisibleActivities = Array.from(activityItems).some(item => item.style.display !== 'none');
-            
-            if (!hasVisibleActivities && filterType === 'mine') {
-                // Create message if it doesn't exist
-                if (!noActivitiesMessage) {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = 'text-center py-4 no-activities-message';
-                    messageDiv.innerHTML = `
-                        <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
-                        <p class="mt-2 text-muted">No activities found for you</p>
-                    `;
-                    document.querySelector('.activity-timeline').appendChild(messageDiv);
-                } else if (noActivitiesMessage.classList.contains('no-activities-message')) {
-                    noActivitiesMessage.style.display = '';
-                }
-            } else {
-                // Hide message if it exists
-                document.querySelectorAll('.no-activities-message').forEach(msg => {
-                    msg.style.display = 'none';
-                });
+            // Show/hide date header based on visibility of its activities
+            header.style.display = hasVisibleActivity ? '' : 'none';
+        });
+        
+        // Check if any activities are visible
+        let hasAnyVisible = false;
+        activityItems.forEach(item => {
+            if (window.getComputedStyle(item).display !== 'none') {
+                hasAnyVisible = true;
             }
         });
-    });
-
-    // Replace the Sales Chart configuration with:
-    const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
-        type: 'bar',
-        data: {
-            labels: <?php echo json_encode($salesChartLabels); ?>,
-            datasets: [{
-                label: 'Monthly Sales ($)',
-                data: <?php echo json_encode($salesChartData); ?>,
-                backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                borderColor: 'rgba(79, 70, 229, 1)',
-                borderWidth: 1,
-                borderRadius: 4,
-                maxBarThickness: 40
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: function(context) {
-                            return '$' + context.raw.toLocaleString();
-                        }
-                    }
+        
+        // Show "no activities" message if none are visible
+        const activityTimeline = document.querySelector('.activity-timeline');
+        if (activityTimeline) {
+            if (!hasAnyVisible) {
+                // If no activities visible, show message
+                let noActivitiesMsg = document.querySelector('.no-activities-msg');
+                if (!noActivitiesMsg) {
+                    noActivitiesMsg = document.createElement('div');
+                    noActivitiesMsg.className = 'no-activities-msg text-center py-4';
+                    noActivitiesMsg.innerHTML = `
+                        <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
+                        <p class="mt-2 text-muted">No activities found for this filter</p>
+                    `;
+                    activityTimeline.appendChild(noActivitiesMsg);
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value.toLocaleString();
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
+            } else {
+                // If activities are visible, remove message if exists
+                const noActivitiesMsg = document.querySelector('.no-activities-msg');
+                if (noActivitiesMsg) {
+                    noActivitiesMsg.remove();
                 }
             }
         }
-    });
-
-    // Replace the Categories Chart configuration with:
-    const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
-    new Chart(categoriesCtx, {
-        type: 'doughnut',
-        data: {
-            labels: <?php echo json_encode($categoriesLabels); ?>,
-            datasets: [{
-                data: <?php echo json_encode($categoriesData); ?>,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.9)',
-                    'rgba(54, 162, 235, 0.9)',
-                    'rgba(255, 206, 86, 0.9)',
-                    'rgba(75, 192, 192, 0.9)',
-                    'rgba(153, 102, 255, 0.9)'
-                ],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '75%',
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: {
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        },
-                        usePointStyle: true,
-                        padding: 20
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleFont: {
-                        family: 'Inter',
-                        size: 13
-                    },
-                    bodyFont: {
-                        family: 'Inter',
-                        size: 12
-                    },
-                    padding: 12,
-                    cornerRadius: 8,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100);
-                            return `${label}: ${value} products (${percentage}%)`;
-                        }
-                    }
+    }
+    
+    // Filter activity items
+    filterDropdownItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Update active state in dropdown
+            filterDropdownItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update filter text
+            currentFilterText.textContent = this.textContent;
+            
+            const filter = this.getAttribute('data-filter');
+            const currentUserId = <?php echo $_SESSION['user_id'] ?? 0; ?>;
+            
+            // Apply filter
+            activityItems.forEach(activityItem => {
+                const itemUserId = parseInt(activityItem.getAttribute('data-user-id'), 10);
+                
+                if (filter === 'all' || (filter === 'mine' && itemUserId === currentUserId)) {
+                    activityItem.style.display = '';
+                } else {
+                    activityItem.style.display = 'none';
                 }
-            }
-        }
+            });
+            
+            // Update date headers visibility
+            updateDateHeadersVisibility();
+        });
     });
 });
 </script>

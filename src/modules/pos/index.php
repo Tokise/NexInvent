@@ -1,5 +1,15 @@
 <?php
-session_start();
+require_once '../../includes/require_auth.php';
+
+// Add aggressive history protection to prevent back button to login page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Store session info in browser storage for history tracking
+$session_id = session_id();
+$user_id = $_SESSION['user_id'];
 require_once '../../config/db.php';
 require_once '../../includes/permissions.php';
 
@@ -147,7 +157,7 @@ $categories = fetchAll("SELECT * FROM categories ORDER BY name");
 </head>
 <body>
 
-<?php include '../../includes/sidebar.php'; ?>
+
 <?php include '../../includes/header.php'; ?>
 
 <div class="main-content">
@@ -477,8 +487,18 @@ function processTransaction() {
                 Swal.fire({
                     icon: 'success',
                     title: 'Sale Complete',
-                    text: 'Transaction has been processed successfully'
-                }).then(() => {
+                    text: 'Transaction has been processed successfully',
+                    showCancelButton: true,
+                    confirmButtonText: 'Print Receipt',
+                    cancelButtonText: 'Close',
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    // Print receipt if confirmed
+                    if (result.isConfirmed) {
+                        window.open(`../sales/receipt.php?sale_id=${response.sale_id}`, '_blank');
+                    }
+                    
                     // Update product quantities in the UI
                     cart.forEach(item => {
                         const productCard = document.querySelector(`.product-card[data-product*='"product_id":${item.product_id}']`);

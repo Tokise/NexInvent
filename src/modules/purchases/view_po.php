@@ -77,6 +77,12 @@ $items = fetchAll($sql, [$po_id]);
             </div>
         </div>
 
+        <?php if ($_SESSION['role'] === 'manager' && $po['status'] === 'pending'): ?>
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="bi bi-info-circle me-2"></i> This purchase order is awaiting approval by an administrator. As a manager, you can view but cannot approve it.
+        </div>
+        <?php endif; ?>
+
         <!-- Purchase Order Info -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
@@ -180,15 +186,23 @@ $items = fetchAll($sql, [$po_id]);
             </div>
         </div>
 
-        <?php if ($po['status'] === 'pending' && hasPermission('manage_purchases')): ?>
+        <?php if ($po['status'] === 'pending'): ?>
         <!-- Action Buttons -->
         <div class="mt-4 text-end">
+            <?php if ($_SESSION['role'] === 'admin'): ?>
             <button class="btn btn-success me-2" onclick="updateStatus('approved')">
                 <i class="bi bi-check-circle"></i> Approve Order
             </button>
+            
             <button class="btn btn-danger" onclick="updateStatus('cancelled')">
                 <i class="bi bi-x-circle"></i> Cancel Order
             </button>
+            <?php elseif ($_SESSION['role'] === 'manager'): ?>
+            <!-- Managers can only view but not approve POs -->
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle"></i> Only administrators can approve purchase orders
+            </div>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>

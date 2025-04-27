@@ -31,6 +31,7 @@ try {
     $quantity = filter_var($_POST['quantity'], FILTER_VALIDATE_FLOAT);
     $type = trim($_POST['type']);
     $reason = trim($_POST['reason']);
+    $is_transfer = isset($_POST['is_transfer']) ? filter_var($_POST['is_transfer'], FILTER_VALIDATE_BOOLEAN) : false;
 
     if ($product_id === false) {
         throw new Exception('Invalid product ID');
@@ -51,39 +52,94 @@ try {
 
     try {
         // Check if product exists and get current stock
-        $sql = "SELECT product_id, in_stock_quantity FROM products WHERE product_id = ? FOR UPDATE";
-        $product = fetchOne($sql, [$product_id]);
+        $sql = "SELECT product_id, name, in_stock_quantity, out_stock_quantity FROM products WHERE product_id = ? FOR UPDATE";
+        $product = fetchRow($sql, [$product_id]);
 
         if (!$product) {
             throw new Exception('Product not found');
         }
 
-        $current_stock = $product['in_stock_quantity'];
+        $current_in_stock = $product['in_stock_quantity'];
+        $current_out_stock = $product['out_stock_quantity'];
+        $product_name = $product['name'];
 
-        // For stock out, check if we have enough quantity
-        if ($type === 'out' && $current_stock < $quantity) {
-            throw new Exception('Insufficient stock for adjustment');
-        }
-
-        // Calculate new stock level
-        $adjustment = $type === 'in' ? $quantity : -$quantity;
-        $new_stock = $current_stock + $adjustment;
-
-        // Update product stock
-        $update_data = [
-            'in_stock_quantity' => $new_stock,
-            'updated_by' => $_SESSION['user_id'],
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
+        // Determine movement type and perform stock adjustment
+        $movement_type = '';
+        $success_message = '';
+        $update_data = [];
         
+        if ($type === 'in') {
+            if ($is_transfer) {
+                // This is a transfer from OUT to IN
+                if ($current_out_stock < $quantity) {
+                    throw new Exception('Insufficient OUT stock for transfer');
+                }
+                
+                $update_data = [
+                    'in_stock_quantity' => $current_in_stock + $quantity,
+                    'out_stock_quantity' => $current_out_stock - $quantity,
+                    'updated_by' => $_SESSION['user_id'],
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $movement_type = 'out_to_in';
+                $success_message = "Transferred $quantity units of $product_name from OUT to IN stock";
+            } else {
+                // Regular stock addition
+                $update_data = [
+                    'in_stock_quantity' => $current_in_stock + $quantity,
+                    'updated_by' => $_SESSION['user_id'],
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $movement_type = 'in_purchase';
+                $success_message = "Added $quantity units to $product_name IN stock";
+            }
+        } else { // type === 'out'
+            if ($is_transfer) {
+                // This is a transfer from IN to OUT
+                if ($current_in_stock < $quantity) {
+                    throw new Exception('Insufficient IN stock for transfer');
+                }
+                
+                $update_data = [
+                    'in_stock_quantity' => $current_in_stock - $quantity,
+                    'out_stock_quantity' => $current_out_stock + $quantity,
+                    'updated_by' => $_SESSION['user_id'],
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $movement_type = 'in_to_out';
+                $success_message = "Transferred $quantity units of $product_name from IN to OUT stock";
+            } else {
+                // Regular stock removal
+                if ($current_in_stock < $quantity) {
+                    throw new Exception('Insufficient stock for adjustment');
+                }
+                
+                $update_data = [
+                    'in_stock_quantity' => $current_in_stock - $quantity,
+                    'updated_by' => $_SESSION['user_id'],
+                    'updated_at' => date('Y-m-d H:i:s')
+                ];
+                
+                $movement_type = 'out_adjustment';
+                $success_message = "Removed $quantity units from $product_name IN stock";
+            }
+        }
+        
+        // Update product stock
         update('products', $update_data, 'product_id = ?', [$product_id]);
+
+        // Calculate adjustment value based on movement type
+        $adjustment = ($type === 'in' && !$is_transfer) || ($type === 'out' && $is_transfer) ? $quantity : -$quantity;
 
         // Create stock movement record
         $movement_data = [
             'product_id' => $product_id,
             'user_id' => $_SESSION['user_id'],
             'quantity' => $adjustment,
-            'type' => $type === 'in' ? 'in_purchase' : 'out_adjustment',
+            'type' => $movement_type,
             'notes' => $reason,
             'created_at' => date('Y-m-d H:i:s')
         ];
@@ -91,7 +147,13 @@ try {
         insert('stock_movements', $movement_data);
 
         $conn->commit();
-        echo json_encode(['success' => true, 'message' => 'Stock adjusted successfully']);
+        echo json_encode([
+            'success' => true, 
+            'message' => $success_message,
+            'movement_type' => $movement_type,
+            'product_name' => $product_name,
+            'quantity' => $quantity
+        ]);
 
     } catch (Exception $e) {
         if ($conn->inTransaction()) {

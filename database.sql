@@ -57,38 +57,53 @@ CREATE TABLE IF NOT EXISTS categories (
     CONSTRAINT fk_categories_updated_by FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 
--- Products Table (Updated with in_threshold_amount)
+-- Products Table (Refactored with clearer inventory management attributes)
 CREATE TABLE IF NOT EXISTS products (
     product_id INT PRIMARY KEY AUTO_INCREMENT,
     category_id INT,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    sku VARCHAR(50) UNIQUE NOT NULL,
-    image_url VARCHAR(255) DEFAULT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    in_stock_quantity INT NOT NULL DEFAULT 0,
-    out_stock_quantity INT NOT NULL DEFAULT 0,
-    reorder_level INT NOT NULL,
-    out_threshold_amount INT NOT NULL,
-    in_threshold_amount INT NOT NULL DEFAULT 10,
+    name VARCHAR(100) NOT NULL COMMENT 'Product name displayed in inventory and sales',
+    description TEXT COMMENT 'Detailed product description',
+    sku VARCHAR(50) UNIQUE NOT NULL COMMENT 'Unique Stock Keeping Unit identifier',
+    image_url VARCHAR(255) DEFAULT NULL COMMENT 'Path to product image',
+    unit_price DECIMAL(10,2) NOT NULL COMMENT 'Standard sale price per unit',
+    
+    -- IN inventory attributes (reserved stock)
+    in_stock_quantity INT NOT NULL DEFAULT 0 COMMENT 'Current quantity in IN stock (reserved)',
+    reorder_level INT NOT NULL COMMENT 'Minimum IN stock quantity before reorder is triggered',
+
+    
+    -- OUT inventory attributes (active stock)
+    out_stock_quantity INT NOT NULL DEFAULT 0 COMMENT 'Current quantity in OUT stock (active)',
+    out_threshold_amount INT NOT NULL COMMENT 'Threshold for low OUT stock alerts',
+    
+    -- Metadata
     created_by INT,
     updated_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- Constraints
     CONSTRAINT fk_product_category FOREIGN KEY (category_id) REFERENCES categories(category_id),
     CONSTRAINT fk_products_created_by FOREIGN KEY (created_by) REFERENCES users(user_id),
     CONSTRAINT fk_products_updated_by FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 
--- Stock Movements Table
+-- Stock Movements Table (Tracks all inventory changes)
 CREATE TABLE IF NOT EXISTS stock_movements (
     movement_id INT PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
     user_id INT NOT NULL,
-    quantity INT NOT NULL,
-    type ENUM('in_initial', 'in_purchase', 'in_to_out', 'out_to_in', 'out_sale', 'out_adjustment') NOT NULL,
-    reference_id INT NULL,
-    notes TEXT,
+    quantity INT NOT NULL COMMENT 'Quantity moved (positive value)',
+    type ENUM(
+        'in_initial', -- Initial stock entry to IN inventory
+        'in_purchase', -- Stock added to IN from purchase order
+        'in_to_out', -- Movement from IN to OUT inventory
+        'out_to_in', -- Movement from OUT to IN inventory
+        'out_sale', -- Stock removed from OUT due to sale
+        'out_adjustment' -- Manual adjustment to OUT stock
+    ) NOT NULL COMMENT 'Type of stock movement',
+    reference_id INT NULL COMMENT 'ID of related transaction (PO, sale, etc.)',
+    notes TEXT COMMENT 'Description of why the movement occurred',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (product_id) REFERENCES products(product_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
@@ -156,10 +171,10 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Notifications Table
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id INT PRIMARY KEY AUTO_INCREMENT,
-    type VARCHAR(50) NOT NULL,
+    type VARCHAR(50) NOT NULL COMMENT 'Type of notification (low_stock, order_pending, etc.)',
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    reference_id INT NULL,
+    reference_id INT NULL COMMENT 'ID of related entity (product, order, etc.)',
     for_role ENUM('admin', 'manager', 'employee') NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -206,20 +221,26 @@ CREATE TABLE IF NOT EXISTS sale_items (
     FOREIGN KEY (product_id) REFERENCES products(product_id)
 );
 
--- Purchase Orders Table (Auto-generated for low stock)
+-- Purchase Orders Table (Refactored with clearer workflow states)
 CREATE TABLE IF NOT EXISTS purchase_orders (
     po_id INT PRIMARY KEY AUTO_INCREMENT,
-    po_number VARCHAR(50) UNIQUE NOT NULL,
-    status ENUM('pending', 'approved', 'ordered', 'received', 'cancelled') NOT NULL DEFAULT 'pending',
-    supplier_name VARCHAR(100),
-    supplier_contact VARCHAR(100),
+    po_number VARCHAR(50) UNIQUE NOT NULL COMMENT 'Human-readable PO identifier',
+    status ENUM(
+        'pending', -- Created but not yet approved
+        'approved', -- Approved by manager, ready to order
+        'ordered', -- Order placed with supplier
+        'received', -- Products received but pending stock addition
+        'completed', -- Products added to inventory
+        'cancelled' -- Order cancelled
+    ) NOT NULL DEFAULT 'pending' COMMENT 'Current state in PO lifecycle',
     total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     notes TEXT,
-    is_auto_generated BOOLEAN DEFAULT FALSE,
+    is_auto_generated BOOLEAN DEFAULT FALSE COMMENT 'Whether PO was created automatically from low stock',
     created_by INT NOT NULL,
     approved_by INT NULL,
     received_by INT NULL,
-    received_at TIMESTAMP NULL,
+    received_at TIMESTAMP NULL COMMENT 'When products were physically received',
+    completed_at TIMESTAMP NULL COMMENT 'When products were added to inventory',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(user_id),
@@ -232,10 +253,10 @@ CREATE TABLE IF NOT EXISTS purchase_order_items (
     po_item_id INT PRIMARY KEY AUTO_INCREMENT,
     po_id INT NOT NULL,
     product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    received_quantity INT DEFAULT 0,
-    unit_price DECIMAL(10,2) NOT NULL,
-    subtotal DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL COMMENT 'Quantity ordered',
+    received_quantity INT DEFAULT 0 COMMENT 'Quantity received (may differ from ordered)',
+    unit_price DECIMAL(10,2) NOT NULL COMMENT 'Purchase price per unit',
+    subtotal DECIMAL(10,2) NOT NULL COMMENT 'Unit price * quantity',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(po_id),
@@ -269,35 +290,18 @@ CREATE TABLE IF NOT EXISTS reports (
     FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
--- Purchase Stock Movements Table
-CREATE TABLE IF NOT EXISTS purchase_stock_movements (
-    movement_id INT PRIMARY KEY AUTO_INCREMENT,
-    po_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
-    movement_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('pending', 'received', 'cancelled') DEFAULT 'pending',
-    notes TEXT,
-    created_by INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (po_id) REFERENCES purchase_orders(po_id),
-    FOREIGN KEY (product_id) REFERENCES products(product_id),
-    FOREIGN KEY (created_by) REFERENCES users(user_id)
-);
-
--- Pending Stock Additions Table
+-- Pending Stock Additions Table (Refactored for clearer workflow)
 CREATE TABLE IF NOT EXISTS pending_stock_additions (
     addition_id INT PRIMARY KEY AUTO_INCREMENT,
-    po_id INT NOT NULL,
+    po_id INT NOT NULL COMMENT 'Related purchase order',
     product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10,2) NOT NULL,
+    quantity INT NOT NULL COMMENT 'Quantity to be added to inventory',
+    unit_price DECIMAL(10,2) NOT NULL COMMENT 'Purchase price per unit',
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     notes TEXT,
-    created_by INT,
-    approved_by INT NULL,
+    created_by INT COMMENT 'User who marked PO as received',
+    approved_by INT NULL COMMENT 'Manager who approved stock addition',
+    approval_date TIMESTAMP NULL COMMENT 'When stock addition was approved',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (po_id) REFERENCES purchase_orders(po_id),
@@ -324,7 +328,8 @@ INSERT INTO permissions (name, description) VALUES
 ('view_employees', 'View employees'),
 ('manage_reports', 'Generate and manage reports'),
 ('view_reports', 'View reports'),
-('manage_settings', 'Manage system settings')
+('manage_settings', 'Manage system settings'),
+('approve_stock_additions', 'Approve pending stock additions')
 ON DUPLICATE KEY UPDATE description = VALUES(description);
 
 -- Assign permissions to roles
@@ -344,7 +349,8 @@ WHERE name IN (
     'manage_purchases',
     'view_purchases',
     'view_employees',
-    'view_reports'
+    'view_reports',
+    'approve_stock_additions'
 );
 
 INSERT IGNORE INTO role_permissions (role, permission_id)
@@ -366,3 +372,115 @@ WHERE NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin');
 INSERT INTO categories (name, description, created_by)
 SELECT 'General', 'General category for products', 1
 WHERE NOT EXISTS (SELECT 1 FROM categories LIMIT 1);
+
+-- Create triggers for automatic notifications
+
+-- Trigger for low IN stock notification
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS after_product_update_check_low_in_stock
+AFTER UPDATE ON products
+FOR EACH ROW
+BEGIN
+    -- If IN stock falls below reorder level and not already in a PO
+    IF NEW.in_stock_quantity <= NEW.reorder_level AND 
+       OLD.in_stock_quantity > OLD.reorder_level THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM purchase_order_items poi 
+            JOIN purchase_orders po ON poi.po_id = po.po_id 
+            WHERE poi.product_id = NEW.product_id 
+            AND po.status IN ('pending', 'approved', 'ordered')
+        ) THEN
+            INSERT INTO notifications (
+                type, 
+                title, 
+                message, 
+                reference_id, 
+                for_role
+            ) VALUES (
+                'low_in_stock',
+                'Low IN Stock Alert',
+                CONCAT('Product "', NEW.name, '" (SKU: ', NEW.sku, ') has fallen below reorder level. Current: ', NEW.in_stock_quantity, ', Reorder Level: ', NEW.reorder_level),
+                NEW.product_id,
+                'manager'
+            );
+        END IF;
+    END IF;
+    
+    -- If OUT stock falls below threshold
+    IF NEW.out_stock_quantity <= NEW.out_threshold_amount AND 
+       OLD.out_stock_quantity > OLD.out_threshold_amount THEN
+        INSERT INTO notifications (
+            type, 
+            title, 
+            message, 
+            reference_id, 
+            for_role
+        ) VALUES (
+            'low_out_stock',
+            'Low OUT Stock Alert',
+            CONCAT('Product "', NEW.name, '" (SKU: ', NEW.sku, ') OUT stock is low. Current: ', NEW.out_stock_quantity, ', Threshold: ', NEW.out_threshold_amount),
+            NEW.product_id,
+            'manager'
+        );
+    END IF;
+END//
+DELIMITER ;
+
+-- Trigger for purchase order status changes
+DELIMITER //
+CREATE TRIGGER IF NOT EXISTS after_po_status_change
+AFTER UPDATE ON purchase_orders
+FOR EACH ROW
+BEGIN
+    -- When PO is approved
+    IF NEW.status = 'approved' AND OLD.status = 'pending' THEN
+        INSERT INTO notifications (
+            type, 
+            title, 
+            message, 
+            reference_id, 
+            for_role
+        ) VALUES (
+            'po_approved',
+            'Purchase Order Approved',
+            CONCAT('Purchase Order #', NEW.po_number, ' has been approved and is ready to be ordered.'),
+            NEW.po_id,
+            'manager'
+        );
+    END IF;
+    
+    -- When PO is received
+    IF NEW.status = 'received' AND OLD.status IN ('approved', 'ordered') THEN
+        INSERT INTO notifications (
+            type, 
+            title, 
+            message, 
+            reference_id, 
+            for_role
+        ) VALUES (
+            'po_received',
+            'Purchase Order Received',
+            CONCAT('Purchase Order #', NEW.po_number, ' has been marked as received. Stock additions pending approval.'),
+            NEW.po_id,
+            'admin'
+        );
+    END IF;
+    
+    -- When PO is completed (stock added)
+    IF NEW.status = 'completed' AND OLD.status = 'received' THEN
+        INSERT INTO notifications (
+            type, 
+            title, 
+            message, 
+            reference_id, 
+            for_role
+        ) VALUES (
+            'po_completed',
+            'Purchase Order Completed',
+            CONCAT('Purchase Order #', NEW.po_number, ' has been completed and stock has been added to inventory.'),
+            NEW.po_id,
+            'manager'
+        );
+    END IF;
+END//
+DELIMITER ;

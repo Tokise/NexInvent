@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f7ff;
+            flex-direction: column;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+    // Ultra-aggressive history blocker
+    (function() {
+        // First check if we're logged in by checking for session storage
+        var isLoggedIn = false;
+        try {
+            var authData = sessionStorage.getItem('nexinvent_auth');
+            isLoggedIn = !!authData;
+        } catch(e) {}
+        
+        // Decide where to redirect
+        var redirectTo = isLoggedIn 
+            ? '/NexInvent/src/modules/dashboard/index.php'
+            : '/NexInvent/src/login/index.php';
+            
+        // Check if this page was loaded via back button (most browsers)
+        var loadedViaBackButton = (window.performance && window.performance.navigation.type === 2);
+        
+        if (loadedViaBackButton || document.referrer.includes('/login/')) {
+            // This is a back button navigation or coming from login
+            if (isLoggedIn) {
+                // We are logged in, redirect to dashboard
+                window.location.replace(redirectTo);
+            } else {
+                // Not logged in, go to login
+                window.location.replace('/NexInvent/src/login/index.php');
+            }
+        } else {
+            // Just redirect normally
+            window.location.href = redirectTo;
+        }
+        
+        // Set a timeout to ensure redirect happens
+        setTimeout(function() {
+            window.location.href = redirectTo;
+        }, 1000);
+    })();
+    </script>
+</head>
+<body>
+    <div class="loader"></div>
+    <p>Redirecting to the appropriate page...</p>
+</body>
+</html> 

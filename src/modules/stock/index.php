@@ -1,13 +1,17 @@
 <?php
-session_start();
+require_once '../../includes/require_auth.php';
+
+// Add aggressive history protection to prevent back button to login page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Store session info in browser storage for history tracking
+$session_id = session_id();
+$user_id = $_SESSION['user_id'];
 require_once '../../config/db.php';
 require_once '../../includes/permissions.php';
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../../login/index.php");
-    exit();
-}
 
 // Check if user has permission to view inventory
 requirePermission('view_inventory');
@@ -62,7 +66,6 @@ $can_manage_inventory = hasPermission('manage_inventory');
 </head>
 <body>
 
-<?php include '../../includes/sidebar.php'; ?>
 <?php include '../../includes/header.php'; ?>
 <div class="main-content">
     <div class="container-fluid">
@@ -83,7 +86,7 @@ $can_manage_inventory = hasPermission('manage_inventory');
             <div class="col-md-6">
                 <div class="card bg-primary text-white">
                     <div class="card-body">
-                        <h5 class="card-title">TOTAL ITEMS</h5>
+                        <h5 class="card-title">Total Items</h5>
                         <h2 class="mb-0"><?php echo count($inventory_items); ?></h2>
                     </div>
                 </div>
@@ -91,7 +94,7 @@ $can_manage_inventory = hasPermission('manage_inventory');
             <div class="col-md-6">
                 <div class="card bg-danger text-white">
                     <div class="card-body">
-                        <h5 class="card-title">LOW STOCK ITEMS</h5>
+                        <h5 class="card-title">Low Stock Items</h5>
                         <h2 class="mb-0"><?php echo $low_stock_count; ?></h2>
                     </div>
                 </div>
@@ -118,7 +121,7 @@ $can_manage_inventory = hasPermission('manage_inventory');
                                 <th>Total Value</th>
                                 <th>Status</th>
                                 <?php if ($can_manage_inventory): ?>
-                                <th>Actions</th>
+                                <th class="text-center">Movements</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -159,12 +162,10 @@ $can_manage_inventory = hasPermission('manage_inventory');
                                         <?php endif; ?>
                                     </td>
                                     <?php if ($can_manage_inventory): ?>
-                                    <td>
-                                        <button class="btn btn-sm btn-success" onclick="adjustStock(<?php echo $item['product_id']; ?>)">
-                                            <i class="bi bi-arrow-left-right"></i> Adjust Stock
-                                        </button>
+                                    <td class="text-center">
+                                        
                                         <a href="movements/index.php?product_id=<?php echo $item['product_id']; ?>" class="btn btn-sm btn-info">
-                                            <i class="bi bi-clock-history"></i> History
+                                            <i class="bi bi-clock-history"></i> 
                                         </a>
                                     </td>
                                     <?php endif; ?>
@@ -178,43 +179,8 @@ $can_manage_inventory = hasPermission('manage_inventory');
     </div>
 </div>
 
-<?php if ($can_manage_inventory): ?>
-<!-- Stock Adjustment Modal -->
-<div class="modal fade" id="adjustStockModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Adjust Stock Level</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="adjustStockForm">
-                    <input type="hidden" id="adjust_product_id">
-                    <div class="mb-3">
-                        <label for="adjustment_type" class="form-label">Adjustment Type</label>
-                        <select class="form-control" id="adjustment_type" required>
-                            <option value="in">Add Stock</option>
-                            <option value="out">Remove Stock</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="adjustment_quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="adjustment_quantity" required min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label for="adjustment_reason" class="form-label">Reason</label>
-                        <textarea class="form-control" id="adjustment_reason" required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">Save Adjustment</button>
-            </div>
-        </div>
-    </div>
-</div>
-<?php endif; ?>
+
+
 
 <!-- Bootstrap 5 JS Bundle with Popper -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -235,10 +201,11 @@ $(document).ready(function() {
     });
 });
 
-function adjustStock(productId) {
+function adjustStock(productId, productName) {
     // Reset form
     $('#adjustStockForm')[0].reset();
     $('#adjust_product_id').val(productId);
+    $('#product_name').val(productName);
     $('#adjustStockModal').modal('show');
 }
 
@@ -247,8 +214,20 @@ function saveStockAdjustment() {
         product_id: $('#adjust_product_id').val(),
         type: $('#adjustment_type').val(),
         quantity: $('#adjustment_quantity').val(),
-        reason: $('#adjustment_reason').val()
+        reason: $('#adjustment_reason').val(),
+        is_transfer: false
     };
+
+    // Set is_transfer based on the selected type
+    if (formData.type === 'in_to_out' || formData.type === 'out_to_in') {
+        // Convert the special types to in/out but mark as transfer
+        formData.is_transfer = true;
+        if (formData.type === 'in_to_out') {
+            formData.type = 'out'; // We're moving stock OUT of IN stock
+        } else {
+            formData.type = 'in';  // We're moving stock IN to IN stock from OUT
+        }
+    }
 
     // Validate required fields
     if (!formData.quantity || !formData.reason) {
@@ -285,10 +264,27 @@ function saveStockAdjustment() {
         data: formData,
         success: function(response) {
             if (response.success) {
+                // Set appropriate icon and color based on movement type
+                let icon = 'success';
+                let iconColor = '#28a745';
+                
+                if (response.movement_type === 'in_to_out') {
+                    icon = 'info';
+                    iconColor = '#17a2b8';
+                } else if (response.movement_type === 'out_to_in') {
+                    icon = 'info';
+                    iconColor = '#17a2b8';
+                } else if (response.movement_type === 'out_adjustment') {
+                    icon = 'warning';
+                    iconColor = '#ffc107';
+                }
+                
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Stock adjustment saved successfully'
+                    icon: icon,
+                    iconColor: iconColor,
+                    title: 'Stock Updated',
+                    text: response.message,
+                    confirmButtonColor: '#28a745'
                 }).then(() => {
                     location.reload();
                 });

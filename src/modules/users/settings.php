@@ -1,5 +1,16 @@
 <?php
-session_start();
+require_once '../../includes/require_auth.php';
+
+// Add aggressive history protection to prevent back button to login page
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: 0");
+
+// Store session info in browser storage for history tracking
+$session_id = session_id();
+$user_id = $_SESSION['user_id'];
+
 require_once '../../config/db.php';
 require_once '../../includes/permissions.php';
 
@@ -101,13 +112,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexInvent - My Account</title>
+    <!-- Block browser caching -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- History protection script -->
+    <script>
+    // History protection to prevent back button to login
+    (function() {
+        try {
+            // Save session info to sessionStorage for the sidebar script
+            sessionStorage.setItem('nexinvent_auth', JSON.stringify({
+                session_id: '<?php echo $session_id; ?>',
+                user_id: <?php echo $user_id; ?>,
+                timestamp: Date.now()
+            }));
+            
+            // Replace current history state to mark this as protected
+            if (history.replaceState) {
+                history.replaceState({page: 'protected'}, document.title, location.href);
+            }
+            
+            // When page loads
+            window.addEventListener('load', function() {
+                // Block back button navigation to login page
+                window.addEventListener('popstate', function(e) {
+                    // If we're going back to an unmarked page
+                    if (!e.state || e.state.page !== 'protected') {
+                        // Force forward to stay on protected page
+                        history.go(1);
+                    }
+                });
+            });
+        } catch(e) {}
+    })();
+    </script>
 </head>
 <body>
 
-<?php include '../../includes/sidebar.php'; ?>
 <?php include '../../includes/header.php'; ?>
 
 <div class="main-content">

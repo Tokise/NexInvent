@@ -1,22 +1,53 @@
 <?php
+// Start session first
 session_start();
+
+// If user is already logged in, redirect to dashboard
+// This must be done before any output or headers
+if (isset($_SESSION['user_id'])) {
+    // Set no-cache headers
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Expires: 0");
+    
+    // Immediately redirect to dashboard
+    header("Location: ../modules/dashboard/index.php");
+    
+    // Send special Javascript-based redirect that removes this page from history
+    echo '<!DOCTYPE html><html><head>
+    <script>
+    // Use replace state to completely remove this page from history
+    window.location.replace("../modules/dashboard/index.php");
+    </script>
+    <meta http-equiv="refresh" content="0;url=../modules/dashboard/index.php">
+    </head><body></body></html>';
+    exit();
+}
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+// Add cache control headers
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Wed, 11 Jan 1984 05:00:00 GMT");
+
+// Check if there's a session expiration message
+if (isset($_GET['expired']) && $_GET['expired'] == 1) {
+    $error = "Your session has expired. Please log in again.";
+}
+
+// Check if there's a security issue message
+if (isset($_GET['security']) && $_GET['security'] == 1) {
+    $error = "Your session has been terminated for security reasons. Please log in again.";
+}
 
 // Check if there's a success message from registration
 if (isset($_SESSION['success'])) {
     $success = $_SESSION['success'];
     unset($_SESSION['success']);
-}
-
-// If user is already logged in, redirect to appropriate dashboard
-if (isset($_SESSION['user_id'])) {
-    if ($_SESSION['role'] === 'customer') {
-        header("Location: ../modules/customer/index.php");
-    } else {
-        header("Location: ../modules/dashboard/index.php");
-    }
-    exit();
 }
 
 // Check if form is submitted
@@ -52,6 +83,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['full_name'] = $user['full_name'];
                 
+                // Generate and store security token
+                $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+                $ip_segments = explode('.', $_SERVER['REMOTE_ADDR']);
+                $ip_partial = '';
+                
+                // Use first 3 segments of IP for dynamic IP environments
+                if (count($ip_segments) >= 3) {
+                    $ip_partial = $ip_segments[0] . '.' . $ip_segments[1] . '.' . $ip_segments[2];
+                }
+                
+                $_SESSION['security_token'] = hash('sha256', $user_agent . $ip_partial . $user['user_id']);
+                
+                // Set last activity timestamp
+                $_SESSION['last_activity'] = time();
+                
                 if ($user['role'] === 'customer') {
                     // Check if customer record exists by email
                     $customer = fetchRow("SELECT customer_id FROM customers WHERE email = ?", [$user['email']]);
@@ -83,17 +129,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Update last login timestamp
                 execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = ?", [$user['user_id']]);
                 
+                // Detect and set currency based on user's IP address
+                require_once __DIR__ . '/../includes/settings.php';
+                if ($user['role'] === 'admin') {
+                    // Only detect currency for admins - they can change it in settings
+                    autoUpdateCurrencyFromIP();
+                }
+                
                 // Commit transaction
                 $conn->commit();
                 
                 // Clear any existing error messages
                 unset($error);
                 
-                // Redirect based on role
-                if ($user['role'] === 'customer') {
-                    header("Location: ../modules/customer/index.php");
+                // After successful login, add JavaScript to clear history
+                echo "<script>
+                    // Clear browser history to prevent back button to login
+                    if (window.history && window.history.pushState) {
+                        window.history.pushState(null, null, window.location.href);
+                        window.onpopstate = function () {
+                            window.history.pushState(null, null, window.location.href);
+                        };
+                    }
+                </script>";
+                
+                // Redirect based on stored redirect URL or role
+                if (isset($_SESSION['redirect_url'])) {
+                    $redirect_url = $_SESSION['redirect_url'];
+                    unset($_SESSION['redirect_url']);
+                    header("Location: " . $redirect_url);
                 } else {
-                    header("Location: ../modules/dashboard/index.php");
+                    if ($user['role'] === 'customer') {
+                        header("Location: ../modules/customer/index.php");
+                    } else {
+                        header("Location: ../modules/dashboard/index.php");
+                    }
                 }
                 exit();
             } catch (Exception $e) {
@@ -107,6 +177,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "An error occurred. Please try again later.";
     }
 }
+
+// Add script to prevent login page from being in history
+echo "<script>
+    // Add event to disable back button to login page
+    window.addEventListener('load', function() {
+        window.history.pushState(null, document.title, window.location.href);
+        window.addEventListener('popstate', function(event) {
+            window.history.pushState(null, document.title, window.location.href);
+        });
+    });
+</script>";
 ?>
 <!DOCTYPE html>
 <html lang="en">

@@ -76,9 +76,13 @@
     
     // Format number as currency
     function formatCurrency(amount) {
+        <?php
+        require_once __DIR__ . '/helpers.php';
+        $currency = getCurrencySettings();
+        ?>
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD'
+            currency: '<?php echo $currency['code']; ?>'
         }).format(amount);
     }
     
