@@ -12,48 +12,46 @@ try {
         throw new Exception('You must be logged in to perform this action');
     }
 
-    if (!hasPermission('view_products')) {
-        throw new Exception('You do not have permission to view categories');
+    if (!hasPermission('manage_products')) {
+        throw new Exception('You do not have permission to manage categories');
     }
 
     // Validate category ID
-    if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    if (!isset($_POST['category_id']) || !is_numeric($_POST['category_id'])) {
         throw new Exception('Invalid category ID');
     }
 
-    // Get category details with user information
-    $stmt = $pdo->prepare("
-        SELECT c.*, 
-               u1.full_name as created_by_name,
-               u2.full_name as updated_by_name
-        FROM categories c
-        LEFT JOIN users u1 ON c.created_by = u1.user_id
-        LEFT JOIN users u2 ON c.updated_by = u2.user_id
-        WHERE c.category_id = ?
-    ");
-    
-    $stmt->execute([$_GET['id']]);
-    $category = $stmt->fetch(PDO::FETCH_ASSOC);
+    $category_id = $_POST['category_id'];
 
+    // Check if category exists
+    $stmt = $pdo->prepare("SELECT * FROM categories WHERE category_id = ?");
+    $stmt->execute([$category_id]);
+    $category = $stmt->fetch();
+    
     if (!$category) {
         throw new Exception('Category not found');
     }
 
-    // Get product count for this category
-    $stmt = $pdo->prepare("
-        SELECT COUNT(*) as product_count 
-        FROM products 
-        WHERE category_id = ?
-    ");
-    
-    $stmt->execute([$_GET['id']]);
+    // Check if category has products
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
+    $stmt->execute([$category_id]);
     $productCount = $stmt->fetchColumn();
 
-    $category['product_count'] = $productCount;
+    if ($productCount > 0) {
+        throw new Exception('Cannot delete category that has products assigned to it');
+    }
+
+    // Delete category
+    $stmt = $pdo->prepare("DELETE FROM categories WHERE category_id = ?");
+    $result = $stmt->execute([$category_id]);
+
+    if (!$result) {
+        throw new Exception('Failed to delete category');
+    }
 
     echo json_encode([
         'success' => true,
-        'data' => $category
+        'message' => 'Category deleted successfully'
     ]);
 
 } catch (Exception $e) {

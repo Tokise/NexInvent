@@ -202,12 +202,55 @@ requirePermission('view_reports');
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Reports & Analytics</h2>
             <div>
-                <button type="button" class="btn btn-primary me-2" onclick="generateReport()">
+                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#generateReportModal">
                     <i class="bi bi-file-earmark-pdf"></i> Generate Report
                 </button>
-                <button type="button" class="btn btn-success" onclick="exportData()">
-                    <i class="bi bi-file-earmark-excel"></i> Export Data
-                </button>
+            </div>
+        </div>
+
+        <!-- Generate Report Modal -->
+        <div class="modal fade" id="generateReportModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Generate Report</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="generateReportForm" method="POST" action="ajax/generate_report.php" target="_blank">
+                            <div class="mb-3">
+                                <label for="report_type" class="form-label">Report Type</label>
+                                <select class="form-select" id="report_type" name="report_type" required>
+                                    <option value="">Select Report Type</option>
+                                    <option value="sales_daily">Daily Sales Report</option>
+                                    <option value="sales_monthly">Monthly Sales Report</option>
+                                    <option value="inventory">Inventory Report</option>
+                                    <option value="attendance">Attendance Report</option>
+                                    <option value="stock_movement">Stock Movement Report</option>
+                                    <option value="purchase_orders">Purchase Orders Report</option>
+                                    <option value="employees">Employees Report</option>
+                                    <option value="categories">Categories Report</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" required>
+                            </div>
+                            <input type="hidden" name="format" id="reportFormat" value="pdf">
+                        </form>
+                        <div class="mb-3">
+                            <canvas id="reportChart" height="120"></canvas>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="generateReport()">Generate PDF</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -223,18 +266,15 @@ requirePermission('view_reports');
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <a href="sales/daily.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('sales_daily')">
                                 Daily Sales Report
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="sales/monthly.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('sales_monthly')">
                                 Monthly Sales Summary
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="sales/performance.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Sales Performance
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
+                           
                         </div>
                     </div>
                 </div>
@@ -250,16 +290,16 @@ requirePermission('view_reports');
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <a href="inventory/stock.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('inventory')">
                                 Current Stock Levels
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="inventory/low-stock.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('low_stock')">
                                 Low Stock Alert
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="inventory/movement.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Stock Movement History
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('stock_movement')">
+                                Stock Movement
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </div>
@@ -267,104 +307,26 @@ requirePermission('view_reports');
                 </div>
             </div>
 
-            <!-- Financial Reports -->
+            <!-- Attendance Reports -->
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100">
                     <div class="card-header bg-info text-white">
                         <h5 class="card-title mb-0">
-                            <i class="bi bi-cash-stack me-2"></i>Financial Reports
+                            <i class="bi bi-calendar-check me-2"></i>Attendance Reports
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <a href="financial/revenue.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Revenue Analysis
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('attendance')">
+                                Daily Attendance
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="financial/expenses.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Expense Tracking
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('attendance_summary')">
+                                Monthly Summary
                                 <i class="bi bi-chevron-right"></i>
                             </a>
-                            <a href="financial/profit.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Profit & Loss
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Employee Reports -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-people me-2"></i>Employee Reports
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <a href="employees/performance.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Performance Metrics
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                            <a href="employees/attendance.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Attendance Records
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                           
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Supplier Reports -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-truck me-2"></i>Supplier Reports
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <a href="suppliers/orders.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Purchase Orders
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                            <a href="suppliers/performance.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Supplier Performance
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                            <a href="suppliers/payments.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Payment History
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Custom Reports -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="card-title mb-0">
-                            <i class="bi bi-gear me-2"></i>Custom Reports
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            <a href="custom/builder.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Report Builder
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                            <a href="custom/scheduled.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Scheduled Reports
-                                <i class="bi bi-chevron-right"></i>
-                            </a>
-                            <a href="custom/saved.php" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                Saved Reports
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="showReportModal('attendance_performance')">
+                                Employee Performance
                                 <i class="bi bi-chevron-right"></i>
                             </a>
                         </div>
@@ -377,24 +339,141 @@ requirePermission('view_reports');
 
 <?php include '../../includes/footer.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-function generateReport() {
-    showLoading('Generating report...');
-    // Add AJAX call here
-    setTimeout(() => {
-        hideLoading();
-        showSuccess('Report generated successfully');
-    }, 1000);
+function showReportModal(type) {
+    $('#report_type').val(type);
+    $('#generateReportModal').modal('show');
 }
 
-function exportData() {
-    showLoading('Preparing data export...');
-    // Add AJAX call here
-    setTimeout(() => {
-        hideLoading();
-        showSuccess('Data exported successfully');
-    }, 1000);
+function generateReport() {
+    const form = document.getElementById('generateReportForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    // Set format to PDF
+    document.getElementById('reportFormat').value = 'pdf';
+    const formData = new FormData(form);
+    fetch('ajax/generate_report.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.indexOf('application/json') !== -1) {
+            return response.json().then(data => { throw new Error(data.error || 'Unknown error'); });
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = $('#report_type').val() + '_report.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        $('#generateReportModal').modal('hide');
+    })
+    .catch(error => {
+        alert('Failed to generate report: ' + error.message);
+    });
 }
+
+// Set default dates
+$(document).ready(function() {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    $('#start_date').val(firstDay.toISOString().split('T')[0]);
+    $('#end_date').val(today.toISOString().split('T')[0]);
+});
+
+let chartInstance = null;
+
+function updateChart() {
+    const reportType = $('#report_type').val();
+    const startDate = $('#start_date').val();
+    const endDate = $('#end_date').val();
+    if (!reportType || !startDate || !endDate) return;
+    fetch('ajax/generate_report.php', {
+        method: 'POST',
+        body: new URLSearchParams({
+            report_type: reportType,
+            start_date: startDate,
+            end_date: endDate,
+            format: 'json' // We'll handle this in PHP to return JSON data only
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (!res.success && res.error) {
+            if (chartInstance) chartInstance.destroy();
+            return;
+        }
+        const data = res.data || res;
+        let chartData = { labels: [], datasets: [] };
+        let chartType = 'bar';
+        // Build chart data based on report type
+        switch (reportType) {
+            case 'sales_daily':
+                chartData.labels = data.map(row => row.date);
+                chartData.datasets = [{ label: 'Total Sales', data: data.map(row => row.total_sales), backgroundColor: '#4f46e5' }];
+                chartType = 'bar';
+                break;
+            case 'sales_monthly':
+                chartData.labels = data.map(row => row.month);
+                chartData.datasets = [{ label: 'Total Sales', data: data.map(row => row.total_sales), backgroundColor: '#4f46e5' }];
+                chartType = 'bar';
+                break;
+            case 'inventory':
+                chartData.labels = data.map(row => row.name);
+                chartData.datasets = [{ label: 'Stock', data: data.map(row => row.current_stock), backgroundColor: '#22c55e' }];
+                chartType = 'bar';
+                break;
+            case 'attendance':
+                chartData.labels = data.map(row => row.employee_name);
+                chartData.datasets = [
+                    { label: 'Present', data: data.map(row => row.present_days), backgroundColor: '#22c55e' },
+                    { label: 'Absent', data: data.map(row => row.absent_days), backgroundColor: '#ef4444' },
+                    { label: 'Late', data: data.map(row => row.late_days), backgroundColor: '#f59e0b' }
+                ];
+                chartType = 'bar';
+                break;
+            case 'stock_movement':
+                chartData.labels = data.map(row => row.date);
+                chartData.datasets = [{ label: 'Quantity', data: data.map(row => row.quantity), backgroundColor: '#3b82f6' }];
+                chartType = 'line';
+                break;
+            case 'purchase_orders':
+                chartData.labels = data.map(row => row.po_number);
+                chartData.datasets = [{ label: 'Total Amount', data: data.map(row => row.total_amount), backgroundColor: '#4f46e5' }];
+                chartType = 'bar';
+                break;
+            case 'employees':
+                chartData.labels = data.map(row => row.employee_name);
+                chartData.datasets = [{ label: 'Employees', data: data.map(() => 1), backgroundColor: '#4f46e5' }];
+                chartType = 'bar';
+                break;
+            case 'categories':
+                chartData.labels = data.map(row => row.name);
+                chartData.datasets = [{ label: 'Categories', data: data.map(() => 1), backgroundColor: '#22c55e' }];
+                chartType = 'bar';
+                break;
+        }
+        const ctx = document.getElementById('reportChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: chartType,
+            data: chartData,
+            options: { responsive: true, plugins: { legend: { display: true } } }
+        });
+    });
+}
+
+$('#report_type, #start_date, #end_date').on('change', updateChart);
+$('#generateReportModal').on('shown.bs.modal', updateChart);
 </script>
 
 </body>

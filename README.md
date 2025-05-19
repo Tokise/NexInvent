@@ -34,11 +34,11 @@ NexInvent is a comprehensive inventory management system designed to help busine
   - Daily sales summary
 
 - **📊 Reporting**
-  - Sales reports
-  - Inventory reports
-  - Employee reports
-  - Purchase reports
-  - Custom date range filtering
+  - Sales, inventory, attendance, stock movement, purchase orders, employees, and categories reports
+  - Customizable date range filtering
+  - **PDF export**
+  - **Charts and data visualization** (Chart.js in web UI, charts embedded in PDFs)
+  - Company branding in PDF reports
 
 ## 📁 Project Structure
 
@@ -96,9 +96,10 @@ NexInvent/
 - Stock counts
 
 ### 📈 Reports Module
-- Customizable reports
-- Export functionality
-- Data visualization
+- Customizable reports for all major entities
+- Export to PDF 
+- **Charts in web UI and embedded in PDFs**
+- Company logo and branding in PDF
 - Date range filtering
 - Summary statistics
 
@@ -109,20 +110,28 @@ NexInvent/
 - Apache/Nginx web server
 - Modern web browser
 - XAMPP (recommended for local development)
+- **PHP Extensions:**
+  - `gd` (for image/chart support)
+  - `zip` (for Excel export)
+  - `mbstring`, `pdo_mysql`, `openssl`, `fileinfo` (recommended)
+- **Composer** (for dependency management)
+- **Node.js** (optional, for advanced chart/image generation)
+- **External Tools:**
+  - [wkhtmltoimage](https://wkhtmltopdf.org/downloads.html) (for embedding charts in PDFs)
 
-## 🚀 Installation
+## 🚀 Installation & Setup
 
-1. Clone the repository to your web server directory:
+1. **Clone the repository:**
    ```bash
    git clone https://github.com/Tokise/NexInvent.git
    ```
 
-2. Import the database schema:
+2. **Import the database schema:**
    ```bash
    mysql -u root -p nexinvent < database.sql
    ```
 
-3. Configure the database connection in `src/config/db.php`:
+3. **Configure the database connection in `src/config/db.php`:**
    ```php
    define('DB_HOST', 'localhost');
    define('DB_USER', 'root');
@@ -130,32 +139,73 @@ NexInvent/
    define('DB_NAME', 'nexinvent');
    ```
 
-4. Enable GD Library in PHP (required for image processing):
-   - For XAMPP:
-     1. Open XAMPP Control Panel
-     2. Click on "Config" button for Apache
-     3. Select "PHP (php.ini)"
-     4. Find the line `;extension=gd`
-     5. Remove the semicolon to make it `extension=gd`
-     6. Save the file
-     7. Restart Apache through XAMPP Control Panel
+4. **Enable required PHP extensions:**
+   - Open your `php.ini` (see below for XAMPP or standalone Apache)
+   - Uncomment or add these lines:
+     ```ini
+     extension=gd
+     extension=zip
+     extension=mbstring
+     extension=pdo_mysql
+     extension=openssl
+     extension=fileinfo
+     ```
+   - Restart Apache after saving changes.
 
-   - For standalone Apache:
-     1. Locate your php.ini file (typically in /etc/php/ or C:\php\)
-     2. Open php.ini in a text editor
-     3. Find the line `;extension=gd`
-     4. Remove the semicolon to make it `extension=gd`
-     5. Save the file
-     6. Restart Apache service
+5. **Install Composer dependencies:**
+   ```bash
+   cd NexInvent
+   composer install
+   ```
 
-   - Verify Installation:
-     1. Create a PHP file with `<?php phpinfo(); ?>`
-     2. Open it in browser
-     3. Search for "gd" - you should see GD Support enabled
+6. **Install and configure wkhtmltoimage:**
+   - Download from [wkhtmltopdf.org/downloads.html](https://wkhtmltopdf.org/downloads.html)
+   - Install to the default location (e.g., `C:\Program Files\wkhtmltopdf\bin`)
+   - Add the install directory to your Windows PATH:
+     1. Open System Properties > Environment Variables
+     2. Edit the `Path` variable
+     3. Add: `C:\Program Files\wkhtmltopdf\bin`
+     4. Restart your computer or log out/in
+   - Test in Command Prompt:
+     ```cmd
+     wkhtmltoimage --version
+     ```
+   - If you see a version number, it's installed correctly.
 
-5. Set up your web server to point to the project directory
+7. **Add Font Awesome for icons:**
+   - Font Awesome is included via CDN in the main header file. No extra setup needed.
 
-6. Access the application through your web browser
+8. **Set up your web server to point to the project directory**
+
+9. **Access the application through your web browser**
+
+## 🛠️ Troubleshooting
+
+- **PDFs are blank or fail to load:**
+  - Make sure there is no output (echo, whitespace, error) before PDF headers in PHP.
+  - Check your PHP error log for errors during PDF generation.
+  - Ensure all required PHP extensions are enabled.
+  - If using charts in PDFs, make sure `wkhtmltoimage` is installed and in your PATH.
+
+- **Excel export fails:**
+  - Ensure `zip` and `gd` extensions are enabled.
+  - Check for errors in your PHP log.
+
+- **Charts do not appear in PDF:**
+  - Confirm `wkhtmltoimage` is installed and working.
+  - Check for errors in your PHP log.
+
+- **JS errors about JSON or PDF:**
+  - Make sure the backend returns valid JSON for AJAX/chart requests and binary for PDF downloads.
+  - See the code for robust error handling in both JS and PHP.
+
+- **General errors:**
+  - Enable error reporting in PHP for debugging:
+    ```php
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+    ```
+  - Check your PHP error log for details.
 
 ## 🔑 Default Login
 
@@ -179,8 +229,6 @@ NexInvent/
 3. Commit your changes
 4. Push to the branch
 5. Create a new Pull Request
-
-
 
 ## 💬 Support
 

@@ -21,6 +21,69 @@ if (!isset($_SESSION['user_id'])) {
 
 requirePermission('manage_employees');
 
+// Handle attendance update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['attendance_id'])) {
+    try {
+        $attendance_id = $_POST['attendance_id'];
+        $employee_id = $_POST['employee_id'];
+        $date = $_POST['date'];
+        $time_in = !empty($_POST['time_in']) ? date('Y-m-d H:i:s', strtotime("$date {$_POST['time_in']}")) : null;
+        $time_out = !empty($_POST['time_out']) ? date('Y-m-d H:i:s', strtotime("$date {$_POST['time_out']}")) : null;
+        $status = $_POST['status'];
+        $notes = $_POST['notes'];
+
+        // First check if the attendance record exists
+        $check_sql = "SELECT attendance_id FROM attendance WHERE attendance_id = ?";
+        $existing = fetchOne($check_sql, [$attendance_id]);
+        
+        if (!$existing) {
+            throw new Exception("Attendance record not found");
+        }
+
+        // Update attendance record using direct SQL for better error handling
+        $sql = "UPDATE attendance SET 
+                employee_id = ?,
+                date = ?,
+                time_in = ?,
+                time_out = ?,
+                status = ?,
+                notes = ?,
+                updated_at = CURRENT_TIMESTAMP
+                WHERE attendance_id = ?";
+        
+        $params = [
+            $employee_id,
+            $date,
+            $time_in,
+            $time_out,
+            $status,
+            $notes,
+            $attendance_id
+        ];
+
+        // Log the update attempt
+        error_log("Attempting to update attendance record: " . print_r($params, true));
+
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute($params);
+
+        if (!$result) {
+            error_log("Database error: " . print_r($stmt->errorInfo(), true));
+            throw new Exception("Failed to update attendance record");
+        }
+
+        $_SESSION['success'] = "Attendance record updated successfully!";
+        header("Location: index.php");
+        exit();
+    } catch (Exception $e) {
+        error_log("Attendance update error: " . $e->getMessage());
+        $_SESSION['error'] = "Error updating attendance: " . $e->getMessage();
+        header("Location: index.php");
+        exit();
+    }
+}
+
 // Get all employees
 $sql = "SELECT e.*, 
         COALESCE(u.full_name, e.temp_name) as full_name,
@@ -62,6 +125,24 @@ $attendance_records = fetchAll($sql);
     <!-- Add Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
+    <style>
+        .status-present {
+            background-color: #198754;
+            color: white;
+        }
+        .status-absent {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-late {
+            background-color: #ffc107;
+            color: black;
+        }
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+        }
+    </style>
    
 </head>
 <body>
@@ -140,7 +221,7 @@ $attendance_records = fetchAll($sql);
                                                 <td><?php echo htmlspecialchars($employee['full_name']); ?></td>
                                                 <td><?php echo htmlspecialchars($employee['position']); ?></td>
                                                 <td><?php echo htmlspecialchars($employee['department']); ?></td>
-                                                <td><?php echo htmlspecialchars($employee['email']); ?></td>
+                                                <td><?php echo $employee['email'] ? htmlspecialchars($employee['email']) : '-'; ?></td>
                                                 <td>
                                                     <?php if ($employee['user_id']): ?>
                                                         <span class="badge bg-<?php echo $employee['user_status'] === 'active' ? 'success' : 'danger'; ?>">
@@ -212,7 +293,7 @@ $attendance_records = fetchAll($sql);
                                                     ?>
                                                 </td>
                                                 <td>
-                                                    <span class="badge status-<?php echo $record['status']; ?>">
+                                                    <span class="badge status-<?php echo strtolower($record['status']); ?>">
                                                         <?php echo ucfirst($record['status']); ?>
                                                     </span>
                                                 </td>
@@ -301,7 +382,26 @@ $attendance_records = fetchAll($sql);
             
             // Employee delete button handler
             $('.delete-employee').click(function() {
-                // Add your employee delete logic here
+                const id = $(this).data('id');
+                const name = $(this).data('name');
+                
+                if (confirm(`Are you sure you want to delete employee "${name}"?`)) {
+                    $.ajax({
+                        url: 'ajax/delete_employee.php',
+                        type: 'POST',
+                        data: { employee_id: id },
+                        success: function(response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert(response.error || 'Failed to delete employee');
+                            }
+                        },
+                        error: function() {
+                            alert('An error occurred while deleting the employee');
+                        }
+                    });
+                }
             });
             
             // Attendance edit button handler
@@ -336,6 +436,35 @@ $attendance_records = fetchAll($sql);
                 $('#delete_attendance_date').text(date);
                 
                 $('#deleteAttendanceModal').modal('show');
+            });
+
+            // Handle delete attendance form submission
+            $('#deleteAttendanceModal form').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+                
+                submitBtn.prop('disabled', true);
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert(response.error || 'Failed to delete attendance record');
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred while deleting the attendance record');
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false);
+                        $('#deleteAttendanceModal').modal('hide');
+                    }
+                });
             });
         });
     </script>

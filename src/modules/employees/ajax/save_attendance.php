@@ -3,75 +3,69 @@ session_start();
 require_once '../../../config/db.php';
 require_once '../../../includes/permissions.php';
 
-// Check if user is logged in and has permission to manage employees
-if (!isset($_SESSION['user_id']) || !hasPermission('manage_employees')) {
-    $_SESSION['error'] = 'You do not have permission to perform this action.';
-    header('Location: ../index.php');
+// Check if user is logged in and has permission
+if (!isset($_SESSION['user_id'])) {
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Unauthorized access']);
     exit();
 }
 
-// Check if form was submitted
+requirePermission('manage_employees');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Validate required fields
-        $required_fields = ['employee_id', 'date', 'status'];
-        foreach ($required_fields as $field) {
-            if (!isset($_POST[$field]) || empty($_POST[$field])) {
-                throw new Exception('Please fill in all required fields.');
-            }
+        $employee_id = $_POST['employee_id'] ?? 0;
+        $date = $_POST['date'] ?? '';
+        $time_in = $_POST['time_in'] ?? '';
+        $time_out = $_POST['time_out'] ?? '';
+        $status = $_POST['status'] ?? 'present';
+        $notes = $_POST['notes'] ?? '';
+        
+        // Validate inputs
+        if (empty($employee_id) || empty($date)) {
+            throw new Exception("Required fields are missing");
         }
-
-        // Validate employee exists
-        $sql = "SELECT employee_id FROM employee_details WHERE employee_id = ?";
-        $employee = fetchRow($sql, [$_POST['employee_id']]);
-        if (!$employee) {
-            throw new Exception('Invalid employee selected.');
+        
+        // Combine date with time for timestamps
+        $time_in_timestamp = !empty($time_in) ? date('Y-m-d H:i:s', strtotime("$date $time_in")) : null;
+        $time_out_timestamp = !empty($time_out) ? date('Y-m-d H:i:s', strtotime("$date $time_out")) : null;
+        
+        // Check if attendance record already exists for this employee and date
+        $sql = "SELECT COUNT(*) FROM attendance WHERE employee_id = ? AND date = ?";
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$employee_id, $date]);
+        $count = $stmt->fetchColumn();
+        
+        if ($count > 0) {
+            throw new Exception("Attendance record already exists for this employee on this date");
         }
-
-        // Validate date format
-        if (!strtotime($_POST['date'])) {
-            throw new Exception('Invalid date format.');
-        }
-
-        // Validate status
-        $valid_statuses = ['present', 'absent', 'late'];
-        if (!in_array($_POST['status'], $valid_statuses)) {
-            throw new Exception('Invalid status selected.');
-        }
-
-        // Check for existing attendance record
-        $sql = "SELECT attendance_id FROM attendance WHERE employee_id = ? AND date = ?";
-        $existing = fetchRow($sql, [$_POST['employee_id'], $_POST['date']]);
-        if ($existing) {
-            throw new Exception('An attendance record already exists for this employee on the selected date.');
-        }
-
-        // Prepare attendance data
-        $attendance_data = [
-            'employee_id' => $_POST['employee_id'],
-            'date' => $_POST['date'],
-            'status' => $_POST['status'],
-            'notes' => !empty($_POST['notes']) ? $_POST['notes'] : null
+        
+        // Insert new attendance record
+        $sql = "INSERT INTO attendance (employee_id, date, time_in, time_out, status, notes, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        
+        $params = [
+            $employee_id,
+            $date,
+            $time_in_timestamp,
+            $time_out_timestamp,
+            $status,
+            $notes
         ];
 
-        // Add time_in and time_out if provided and status is not 'absent'
-        if ($_POST['status'] !== 'absent') {
-            if (!empty($_POST['time_in'])) {
-                $attendance_data['time_in'] = date('Y-m-d H:i:s', strtotime($_POST['date'] . ' ' . $_POST['time_in']));
-            }
-            if (!empty($_POST['time_out'])) {
-                $attendance_data['time_out'] = date('Y-m-d H:i:s', strtotime($_POST['date'] . ' ' . $_POST['time_out']));
-            }
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute($params);
+
+        if (!$result) {
+            throw new Exception("Failed to save attendance record");
         }
-
-        // Insert attendance record
-        $attendance_id = insert('attendance', $attendance_data);
-
-        $_SESSION['success'] = 'Attendance record has been saved successfully.';
+        
+        $_SESSION['success'] = "Attendance record saved successfully!";
     } catch (Exception $e) {
-        $_SESSION['error'] = $e->getMessage();
+        $_SESSION['error'] = "Error: " . $e->getMessage();
     }
 }
 
-header('Location: ../index.php');
+header("Location: ../index.php");
 exit(); 

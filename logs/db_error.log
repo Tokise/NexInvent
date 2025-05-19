@@ -331,3 +331,324 @@ Stack trace:
 [27-Apr-2025 21:07:12 Europe/Berlin] Saving image to: ../../../uploads/products/680e8060836ff.png
 [27-Apr-2025 21:07:12 Europe/Berlin] Image saved successfully
 [27-Apr-2025 21:07:12 Europe/Berlin] Transaction committed successfully
+[18-May-2025 15:04:44 Europe/Berlin] Received product save request: {"name":"PetQuest","sku":"123","category_id":"1","description":"adawdaw","unit_price":"100","initial_stock":"50","reorder_level":"20","out_threshold_amount":"30"}
+[18-May-2025 15:04:44 Europe/Berlin] Files received: {"image":{"name":"user-icon.png","full_path":"user-icon.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\phpDE31.tmp","error":0,"size":164885}}
+[18-May-2025 15:04:44 Europe/Berlin] Validated data: {"name":"PetQuest","sku":"123","category_id":"1","description":"adawdaw","unit_price":"100","initial_stock":"50","reorder_level":"20","out_threshold_amount":"30"}
+[18-May-2025 15:04:44 Europe/Berlin] Processing image upload
+[18-May-2025 15:04:44 Europe/Berlin] Saving image to: ../../../uploads/products/6829daec72ca0.png
+[18-May-2025 15:04:44 Europe/Berlin] Image saved successfully
+[18-May-2025 15:04:44 Europe/Berlin] Transaction committed successfully
+[18-May-2025 15:11:25 Europe/Berlin] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\xampp\htdocs\NexInvent\src\modules\employees\index.php on line 143
+[18-May-2025 15:17:02 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:17:02 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:17:02 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:17:02
+)
+
+Where: Array
+[18-May-2025 15:17:02 Europe/Berlin] Database error in fetchAll: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'e.full_name' in 'order clause'
+SQL: SELECT e.*, u.email 
+        FROM employee_details e 
+        LEFT JOIN users u ON e.user_id = u.user_id 
+        ORDER BY e.full_name
+Params: Array
+(
+)
+
+[18-May-2025 15:17:02 Europe/Berlin] PHP Fatal error:  Uncaught Exception: Database error occurred while fetching records in C:\xampp\htdocs\NexInvent\src\config\db.php:50
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\employees\attendance.php(59): fetchAll('SELECT e.*, u.e...')
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\config\db.php on line 50
+[18-May-2025 15:20:19 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:20:19 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:20:19 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:20:19
+)
+
+Where: Array
+[18-May-2025 15:21:29 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:21:29 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:21:29 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 2025-05-18 00:00:00
+    [time_out] => 2025-05-18 17:00:00
+    [status] => late
+    [notes] => 
+    [updated_at] => 2025-05-18 15:21:29
+)
+
+Where: Array
+[18-May-2025 15:21:51 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:21:51 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:21:51 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:21:51
+)
+
+Where: Array
+[18-May-2025 15:27:52 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:27:52 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:27:52 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:27:52
+)
+
+Where: Array
+[18-May-2025 15:28:14 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:28:14 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:28:14 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:28:14
+)
+
+Where: Array
+[18-May-2025 15:31:49 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:31:49 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:31:49 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:31:49
+)
+
+Where: Array
+[18-May-2025 15:36:48 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:36:48 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:36:48 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 2025-05-18 00:00:00
+    [time_out] => 2025-05-18 17:00:00
+    [status] => late
+    [notes] => 
+    [updated_at] => 2025-05-18 15:36:48
+)
+
+Where: Array
+[18-May-2025 15:38:29 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:38:29 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:38:29 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:38:29
+)
+
+Where: Array
+[18-May-2025 15:40:57 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:40:57 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:40:57 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 
+    [time_out] => 
+    [status] => absent
+    [notes] => 
+    [updated_at] => 2025-05-18 15:40:57
+)
+
+Where: Array
+[18-May-2025 15:43:14 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 134
+[18-May-2025 15:43:14 Europe/Berlin] PHP Warning:  Array to string conversion in C:\xampp\htdocs\NexInvent\src\config\db.php on line 141
+[18-May-2025 15:43:14 Europe/Berlin] Update Error: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'Array' in 'where clause'
+Table: attendance
+Data: Array
+(
+    [employee_id] => 1
+    [date] => 2025-05-18
+    [time_in] => 2025-05-18 00:00:00
+    [time_out] => 2025-05-18 17:00:00
+    [status] => late
+    [notes] => 
+    [updated_at] => 2025-05-18 15:43:14
+)
+
+Where: Array
+[18-May-2025 16:41:30 Europe/Berlin] Cannot delete category: It contains products
+[18-May-2025 16:41:52 Europe/Berlin] Cannot delete category: It contains products
+[18-May-2025 16:54:52 Europe/Berlin] Login failed for user manager - Password verification failed
+[18-May-2025 16:54:52 Europe/Berlin] Provided password hash: $2y$10$9eG8FDclis5iVummYTP/fu2qgLulUtBs5srdS0p7ICpIPgaxr0jdO
+[18-May-2025 16:54:52 Europe/Berlin] Stored password hash: $2y$10$CPp/RvshX8uVchh6iJzDLOnxmDtl2SPI3HV6dNZfG/xz0GKImGJKO
+[18-May-2025 17:02:30 Europe/Berlin] PHP Warning:  require_once(../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\generate_report.php on line 5
+[18-May-2025 17:02:30 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\generate_report.php on line 5
+[19-May-2025 01:07:13 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:07:13 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:07:35 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:07:35 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:07:50 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:07:50 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:22:27 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:22:27 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:22:54 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:22:54 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:5
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 5
+[19-May-2025 01:24:37 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 01:24:37 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 01:28:37 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 01:28:37 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 01:44:20 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PhpOffice\PhpSpreadsheet\Writer\BaseWriter" not found in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php:36
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php(10): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php on line 36
+[19-May-2025 01:44:38 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PhpOffice\PhpSpreadsheet\Writer\BaseWriter" not found in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php:36
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php(10): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php on line 36
+[19-May-2025 01:48:35 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PhpOffice\PhpSpreadsheet\Writer\BaseWriter" not found in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php:36
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php(10): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php on line 36
+[19-May-2025 01:48:47 Europe/Berlin] PHP Fatal error:  Uncaught Error: Class "PhpOffice\PhpSpreadsheet\Writer\BaseWriter" not found in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php:36
+Stack trace:
+#0 C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php(10): require_once()
+#1 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\libraries\PhpSpreadsheet-4.2.0\src\PhpSpreadsheet\Writer\Xlsx.php on line 36
+[19-May-2025 02:00:54 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:00:54 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:01:14 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:01:14 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:04:42 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:04:42 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:05:00 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:05:00 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:08:25 Europe/Berlin] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\NexInvent\src\includes\permissions.php on line 3
+[19-May-2025 02:08:25 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:08:25 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:9
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:09:33 Europe/Berlin] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\xampp\htdocs\NexInvent\src\includes\permissions.php on line 3
+[19-May-2025 02:09:33 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:09:33 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:9
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:11:26 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:11:26 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:9
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 9
+[19-May-2025 02:17:23 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:17:23 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:17:37 Europe/Berlin] PHP Warning:  require_once(../../../vendor/autoload.php): Failed to open stream: No such file or directory in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 02:17:37 Europe/Berlin] PHP Fatal error:  Uncaught Error: Failed opening required '../../../vendor/autoload.php' (include_path='C:\xampp\php\PEAR') in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php:8
+Stack trace:
+#0 {main}
+  thrown in C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php on line 8
+[19-May-2025 03:28:43 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 03:28:46 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 03:36:58 Europe/Berlin] wkhtmltoimage not found in common paths or PATH
+[19-May-2025 03:36:58 Europe/Berlin] wkhtmltoimage is not installed. Charts will not be generated.
+[19-May-2025 03:37:00 Europe/Berlin] wkhtmltoimage not found in common paths or PATH
+[19-May-2025 03:37:00 Europe/Berlin] wkhtmltoimage is not installed. Charts will not be generated.
+[19-May-2025 03:45:11 Europe/Berlin] PDF generation error: Undefined constant "PDF_PAGE_ORIENTATION"\n#0 C:\xampp\htdocs\NexInvent\src\modules\reports\ajax\generate_report.php(55): generatePDF(Array, 'sales_monthly')
+#1 {main}
+[19-May-2025 03:47:20 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 03:47:41 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 03:47:56 Europe/Berlin] Logo not found at: NULL

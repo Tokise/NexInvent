@@ -1,0 +1,11 @@
+Array
+(
+    [0] => Array
+        (
+            [name] => General
+            [description] => General category for products
+            [created_by] => System Administrator
+            [created_at] => 2025-05-18 21:03:13
+        )
+
+)

@@ -99,7 +99,7 @@ $categories = fetchAll($sql);
                                     <button class="btn btn-sm btn-primary" onclick="editCategory(<?php echo $category['category_id']; ?>)">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteCategory(<?php echo $category['category_id']; ?>)">
+                                    <button class="btn btn-sm btn-danger" onclick="deleteCategory(<?php echo $category['category_id']; ?>, '<?php echo htmlspecialchars($category['name']); ?>')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -165,6 +165,28 @@ $categories = fetchAll($sql);
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="updateCategory()">Update Category</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Category Modal -->
+<div class="modal fade" id="deleteCategoryModal" tabindex="-1" aria-labelledby="deleteCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCategoryModalLabel">Delete Category</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="delete_category_id">
+                <p>Are you sure you want to delete the category:</p>
+                <p class="fw-bold" id="delete_category_name"></p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCategory()">Delete Category</button>
             </div>
         </div>
     </div>
@@ -268,29 +290,37 @@ function updateCategory() {
     });
 }
 
-function deleteCategory(categoryId) {
-    showConfirm('Are you sure you want to delete this category?', function() {
-        showLoading('Deleting category...');
+function deleteCategory(categoryId, categoryName) {
+    $('#delete_category_id').val(categoryId);
+    $('#delete_category_name').text(categoryName);
+    $('#deleteCategoryModal').modal('show');
+}
 
-        $.ajax({
-            url: 'delete_category.php',
-            type: 'POST',
-            data: { category_id: categoryId },
-            success: function(response) {
-                hideLoading();
-                if (response.success) {
-                    showSuccess('Category deleted successfully', function() {
-                        location.reload();
-                    });
-                } else {
-                    showError(response.error);
-                }
-            },
-            error: function(xhr) {
-                hideLoading();
-                showError('Failed to delete category');
+function confirmDeleteCategory() {
+    const categoryId = $('#delete_category_id').val();
+    const submitBtn = $('#deleteCategoryModal .btn-danger');
+    
+    submitBtn.prop('disabled', true);
+    
+    $.ajax({
+        url: 'delete_category.php',
+        type: 'POST',
+        data: { category_id: categoryId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                $('#deleteCategoryModal').modal('hide');
+                location.reload();
+            } else {
+                alert(response.error || 'Failed to delete category');
             }
-        });
+        },
+        error: function(xhr) {
+            alert('An error occurred while deleting the category');
+        },
+        complete: function() {
+            submitBtn.prop('disabled', false);
+        }
     });
 }
 </script>

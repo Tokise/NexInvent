@@ -6,7 +6,7 @@ require_once '../../../includes/permissions.php';
 // Check if user is logged in and has permission
 if (!isset($_SESSION['user_id'])) {
     header('Content-Type: application/json');
-    echo json_encode(['error' => 'Unauthorized access']);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
     exit();
 }
 
@@ -16,19 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $attendance_id = $_POST['attendance_id'] ?? 0;
         
-        // Validate input
         if (empty($attendance_id)) {
             throw new Exception("Attendance ID is required");
         }
         
         // Delete attendance record
-        delete('attendance', ['attendance_id' => $attendance_id]);
+        $sql = "DELETE FROM attendance WHERE attendance_id = ?";
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute([$attendance_id]);
+
+        if (!$result) {
+            throw new Exception("Failed to delete attendance record");
+        }
         
-        $_SESSION['success'] = "Attendance record deleted successfully!";
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit();
     } catch (Exception $e) {
-        $_SESSION['error'] = "Error: " . $e->getMessage();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        exit();
     }
 }
 
-header("Location: ../attendance.php");
+header('Content-Type: application/json');
+echo json_encode(['success' => false, 'error' => 'Invalid request method']);
 exit(); 

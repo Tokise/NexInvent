@@ -32,17 +32,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $time_out_timestamp = !empty($time_out) ? date('Y-m-d H:i:s', strtotime("$date $time_out")) : null;
         
         // Update attendance record
-        $attendance_data = [
-            'employee_id' => $employee_id,
-            'date' => $date,
-            'time_in' => $time_in_timestamp,
-            'time_out' => $time_out_timestamp,
-            'status' => $status,
-            'notes' => $notes,
-            'updated_at' => date('Y-m-d H:i:s')
-        ];
+        $sql = "UPDATE attendance SET 
+                employee_id = ?,
+                date = ?,
+                time_in = ?,
+                time_out = ?,
+                status = ?,
+                notes = ?,
+                updated_at = CURRENT_TIMESTAMP
+                WHERE attendance_id = ?";
         
-        update('attendance', $attendance_data, ['attendance_id' => $attendance_id]);
+        $params = [
+            $employee_id,
+            $date,
+            $time_in_timestamp,
+            $time_out_timestamp,
+            $status,
+            $notes,
+            $attendance_id
+        ];
+
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute($params);
+
+        if (!$result) {
+            throw new Exception("Failed to update attendance record");
+        }
         
         $_SESSION['success'] = "Attendance record updated successfully!";
     } catch (Exception $e) {
@@ -50,5 +66,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-header("Location: ../attendance.php");
+header("Location: ../index.php");
 exit(); 
