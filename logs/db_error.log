@@ -652,3 +652,35 @@ Stack trace:
 [19-May-2025 03:47:20 Europe/Berlin] Logo not found at: NULL
 [19-May-2025 03:47:41 Europe/Berlin] Logo not found at: NULL
 [19-May-2025 03:47:56 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 04:05:58 Europe/Berlin] Received product save request: {"name":"SAMSUNG GALAXY","sku":"222","category_id":"4","description":"TEST","unit_price":"100","initial_stock":"50","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:05:58 Europe/Berlin] Files received: {"image":{"name":"download.jfif","full_path":"download.jfif","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\phpC578.tmp","error":0,"size":4863}}
+[19-May-2025 04:05:58 Europe/Berlin] Validated data: {"name":"SAMSUNG GALAXY","sku":"222","category_id":"4","description":"TEST","unit_price":"100","initial_stock":"50","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:05:58 Europe/Berlin] Processing image upload
+[19-May-2025 04:05:58 Europe/Berlin] Transaction rolled back: Invalid file type. Allowed types: jpg, jpeg, png, gif
+[19-May-2025 04:05:58 Europe/Berlin] Error saving product: Invalid file type. Allowed types: jpg, jpeg, png, gif
+[19-May-2025 04:05:58 Europe/Berlin] Stack trace: #0 {main}
+[19-May-2025 04:10:39 Europe/Berlin] Received product save request: {"name":"SAMSUNG GALAXY","sku":"222","category_id":"4","description":"TEST","unit_price":"100","initial_stock":"20","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:10:39 Europe/Berlin] Files received: {"image":{"name":"phone.png","full_path":"phone.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\phpFFB.tmp","error":0,"size":3166}}
+[19-May-2025 04:10:39 Europe/Berlin] Validated data: {"name":"SAMSUNG GALAXY","sku":"222","category_id":"4","description":"TEST","unit_price":"100","initial_stock":"20","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:10:39 Europe/Berlin] Processing image upload
+[19-May-2025 04:10:39 Europe/Berlin] Saving image to: ../../../uploads/products/682a931f54119.png
+[19-May-2025 04:10:39 Europe/Berlin] Image saved successfully
+[19-May-2025 04:10:39 Europe/Berlin] Transaction committed successfully
+[19-May-2025 04:26:16 Europe/Berlin] Received product save request: {"name":"SAMSUNG GALAXY S21 ULTRA","sku":"123976","category_id":"4","description":"TEST","unit_price":"150","initial_stock":"30","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:26:16 Europe/Berlin] Files received: {"image":{"name":"phone.png","full_path":"phone.png","type":"image\/png","tmp_name":"C:\\xampp\\tmp\\php5BB7.tmp","error":0,"size":3166}}
+[19-May-2025 04:26:16 Europe/Berlin] Validated data: {"name":"SAMSUNG GALAXY S21 ULTRA","sku":"123976","category_id":"4","description":"TEST","unit_price":"150","initial_stock":"30","reorder_level":"5","out_threshold_amount":"5"}
+[19-May-2025 04:26:16 Europe/Berlin] Processing image upload
+[19-May-2025 04:26:16 Europe/Berlin] Saving image to: ../../../uploads/products/682a96c8377ae.png
+[19-May-2025 04:26:16 Europe/Berlin] Image saved successfully
+[19-May-2025 04:26:16 Europe/Berlin] Transaction committed successfully
+[19-May-2025 04:35:24 Europe/Berlin] Logo not found at: NULL
+[19-May-2025 04:39:29 Europe/Berlin] Received product save request: {"name":"Couch","sku":"2241422","category_id":"5","description":"TEST","unit_price":"30","initial_stock":"10","reorder_level":"2","out_threshold_amount":"2"}
+[19-May-2025 04:39:29 Europe/Berlin] Files received: {"image":{"name":"pexels-olly-3757055.jpg","full_path":"pexels-olly-3757055.jpg","type":"image\/jpeg","tmp_name":"C:\\xampp\\tmp\\php77B2.tmp","error":0,"size":690179}}
+[19-May-2025 04:39:29 Europe/Berlin] Validated data: {"name":"Couch","sku":"2241422","category_id":"5","description":"TEST","unit_price":"30","initial_stock":"10","reorder_level":"2","out_threshold_amount":"2"}
+[19-May-2025 04:39:29 Europe/Berlin] Processing image upload
+[19-May-2025 04:39:29 Europe/Berlin] Saving image to: ../../../uploads/products/682a99e1cadae.jpg
+[19-May-2025 04:39:29 Europe/Berlin] Image saved successfully
+[19-May-2025 04:39:29 Europe/Berlin] Transaction committed successfully
+[19-May-2025 04:41:42 Europe/Berlin] Login failed for user employee - Password verification failed
+[19-May-2025 04:41:42 Europe/Berlin] Provided password hash: $2y$10$iUHb4RwkNGP2psFojbG1LOJgvm0rZoMqp0ERxf0YOKqfF982cnta6
+[19-May-2025 04:41:42 Europe/Berlin] Stored password hash: $2y$10$fIAHaQvc92KT0HFcQO6sK.VVnSjCYPR6TICmQgq4eY9E1/kmjvUhK
